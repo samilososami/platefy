@@ -31,7 +31,7 @@ Platefy is a multilingual AI assistant concept for restaurant websites. It turns
 
 ## Run locally
 
-Requirements: Node.js 20.19+ (or 22.12+) and npm.
+Requirements: Node.js 24 and npm.
 
 ```bash
 npm ci
