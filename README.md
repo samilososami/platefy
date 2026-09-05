@@ -32,4 +32,4 @@ Vercel compila el proyecto con `npm run build` y publica `dist/`. `vercel.json` 
 Los detalles de implementación, proveedores y validación están en [`docs/`](./docs/).
 
 
-xavisami&co
+_*xavisami&co*_
