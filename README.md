@@ -30,3 +30,6 @@ La carta, los precios y los horarios de la demostración son ficticios. No se co
 Vercel compila el proyecto con `npm run build` y publica `dist/`. `vercel.json` redirige la antigua ruta `/app` a `/chatbot` y configura cabeceras básicas de seguridad.
 
 Los detalles de implementación, proveedores y validación están en [`docs/`](./docs/).
+
+
+xavisami&co
