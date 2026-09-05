@@ -5,16 +5,44 @@
   "redirects": [
     {
       "source": "/app",
-      "destination": "/chatbot",
+      "destination": "/chatbot/",
+      "permanent": true
+    },
+    {
+      "source": "/app/",
+      "destination": "/chatbot/",
       "permanent": true
     },
     {
       "source": "/app/:path*",
-      "destination": "/chatbot",
+      "destination": "/chatbot/",
+      "permanent": true
+    },
+    {
+      "source": "/app/:path*/",
+      "destination": "/chatbot/",
       "permanent": true
     }
   ],
   "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

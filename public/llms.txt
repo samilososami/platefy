@@ -1,9 +1,11 @@
 # Platefy
 
-Platefy es un asistente conversacional para restaurantes. Esta web contiene una demostración con una carta ficticia.
+Platefy es un asistente conversacional para restaurantes. Responde preguntas sobre la carta, explica ingredientes, recomienda platos y orienta sobre el local desde la web del restaurante.
 
 Rutas principales:
-- https://platefy.samilososami.com/
-- https://platefy.samilososami.com/chatbot/
+- https://platefy.samilososami.com/ — producto, capacidades, funcionamiento y preguntas frecuentes.
+- https://platefy.samilososami.com/en/ — versión en inglés de la web del producto.
+- https://platefy.samilososami.com/ca/ — versión en catalán de la web del producto.
+- https://platefy.samilososami.com/chatbot/ — demostración interactiva con una carta ficticia.
 
-La demostración no confirma reservas y no sustituye la información de alérgenos proporcionada por un restaurante real.
+La demostración usa un restaurante de ejemplo. No confirma reservas reales y la información definitiva de alérgenos debe proceder de cada restaurante.

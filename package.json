@@ -5,13 +5,15 @@
     "type": "module",
     "scripts": {
         "dev": "umask 0002 && vite --host 0.0.0.0",
-        "check": "umask 0002 && tsc --noEmit && vite build",
-        "build": "umask 0002 && vite build",
+        "check": "umask 0002 && tsc --noEmit && npm run build",
+        "build": "umask 0002 && vite build && node scripts/create-localized-pages.mjs",
         "test": "umask 0002 && node --test tests/gradio.test.mjs && vitest run",
         "preview": "umask 0002 && vite preview --host 0.0.0.0"
     },
     "dependencies": {
+        "@fontsource-variable/manrope": "^5.3.0",
         "@fontsource/dm-sans": "^5.2.8",
+        "@fontsource/ibm-plex-mono": "^5.3.0",
         "@fontsource/instrument-serif": "^5.3.0",
         "lucide-react": "^0.469.0",
         "react": "^19.0.0",

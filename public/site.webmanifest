@@ -1,0 +1,16 @@
+{
+  "name": "Platefy",
+  "short_name": "Platefy",
+  "description": "Asistente conversacional para restaurantes.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f3ee",
+  "theme_color": "#f5f3ee",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

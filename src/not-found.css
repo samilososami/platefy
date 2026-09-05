@@ -1,0 +1,31 @@
+@font-face {
+  font-family: 'Manrope';
+  src: url('../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+* { box-sizing: border-box; }
+:root { color: #1a1a18; background: #f5f3ee; font-family: 'Manrope', Arial, sans-serif; }
+body { min-width: 320px; min-height: 100vh; margin: 0; display: grid; grid-template-rows: 80px 1fr auto; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid #a83a19; outline-offset: 5px; }
+header, footer { width: min(1440px, 100%); margin: 0 auto; padding-left: clamp(20px, 4.3vw, 72px); padding-right: clamp(20px, 4.3vw, 72px); }
+header { display: flex; align-items: center; }
+.brand { display: inline-flex; align-items: flex-start; font: 400 29px/.9 'Instrument Serif', Georgia, serif; letter-spacing: -.035em; }
+.brand svg { width: 13px; height: 13px; margin: -1px 0 0 4px; fill: none; stroke: #dc643e; stroke-width: 1.8; stroke-linecap: round; }
+main { width: min(900px, 100%); margin: auto; padding: 90px clamp(20px, 4.3vw, 72px); text-align: center; }
+.code { margin: 0; color: #a83a19; font-size: 11px; font-weight: 700; letter-spacing: .14em; }
+h1 { max-width: 800px; margin: 22px auto 0; font-size: clamp(48px, 7vw, 92px); line-height: .96; letter-spacing: -.067em; text-wrap: balance; }
+.message { margin: 28px auto 0; color: #615f5a; font-size: 17px; line-height: 1.6; }
+nav { margin-top: 34px; display: flex; align-items: center; justify-content: center; gap: 25px; }
+nav a { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 26px; padding: 12px 19px; border-radius: 9px; font-size: 13px; font-weight: 720; }
+.primary { color: #f5f3ee; background: #1a1a18; }
+.secondary { border-bottom: 1px solid #dc643e; border-radius: 0; padding-left: 0; padding-right: 0; }
+footer { padding-top: 24px; padding-bottom: 24px; display: flex; justify-content: space-between; border-top: 1px solid #d5d1c8; color: #615f5a; font-size: 10px; }
+@media (max-width: 560px) { body { grid-template-rows: 64px 1fr auto; } main { padding-top: 70px; padding-bottom: 70px; } nav { flex-direction: column; gap: 10px; } .primary { width: min(100%, 260px); } }

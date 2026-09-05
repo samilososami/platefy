@@ -1,21 +1,264 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
-    <meta name="theme-color" content="#f8f6f1">
-    <meta name="description" content="Tu carta, ahora sabe conversar. Platefy es el asistente de IA que conoce tu restaurante y acompaña a tus clientes.">
-    <meta name="robots" content="index, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f3ee">
+    <meta name="color-scheme" content="light">
+    <meta name="description" content="Platefy convierte la web de tu restaurante en una conversación que responde sobre la carta, recomienda platos y orienta a cada cliente.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="author" content="Platefy">
+
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Platefy — Tu carta, ahora sabe conversar">
-    <meta property="og:description" content="IA para restaurantes, integrada en tu propia web.">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:site_name" content="Platefy">
+    <meta property="og:title" content="Platefy — IA que atiende tu restaurante">
+    <meta property="og:description" content="Platefy convierte la web de tu restaurante en una conversación que responde sobre la carta, recomienda platos y orienta a cada cliente.">
     <meta property="og:url" content="https://platefy.samilososami.com/">
+    <meta property="og:image" content="https://platefy.samilososami.com/og-platefy.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Platefy y su esfera de cristal naranja sobre un fondo marfil">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Platefy — IA que atiende tu restaurante">
+    <meta name="twitter:description" content="Platefy convierte la web de tu restaurante en una conversación que responde sobre la carta, recomienda platos y orienta a cada cliente.">
+    <meta name="twitter:image" content="https://platefy.samilososami.com/og-platefy.jpg">
+    <meta name="twitter:image:alt" content="Platefy y su esfera de cristal naranja sobre un fondo marfil">
+
     <link rel="canonical" href="https://platefy.samilososami.com/">
-    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <title>Platefy — Tu carta, ahora sabe conversar.</title>
-</head>
-<body>
-    <div id="root"></div>
-    <script type="module" src="./src/main.tsx"></script>
-</body>
+    <link rel="alternate" hreflang="es" href="https://platefy.samilososami.com/">
+    <link rel="alternate" hreflang="en" href="https://platefy.samilososami.com/en/">
+    <link rel="alternate" hreflang="ca" href="https://platefy.samilososami.com/ca/">
+    <link rel="alternate" hreflang="x-default" href="https://platefy.samilososami.com/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="preload" href="/images/platefy-orb.webp" as="image" type="image/webp" fetchpriority="high">
+    <title>Platefy — IA que atiende tu restaurante</title>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://platefy.samilososami.com/#organization",
+            "name": "Platefy",
+            "url": "https://platefy.samilososami.com/",
+            "logo": "https://platefy.samilososami.com/favicon.svg",
+            "description": "Asistente conversacional de inteligencia artificial para restaurantes."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://platefy.samilososami.com/#website",
+            "url": "https://platefy.samilososami.com/",
+            "name": "Platefy",
+            "inLanguage": ["es", "en", "ca"],
+            "publisher": { "@id": "https://platefy.samilososami.com/#organization" }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://platefy.samilososami.com/#software",
+            "name": "Platefy",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "url": "https://platefy.samilososami.com/chatbot/",
+            "description": "Asistente web para consultar cartas, recibir recomendaciones y resolver dudas sobre un restaurante.",
+            "author": { "@id": "https://platefy.samilososami.com/#organization" }
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "¿Tengo que cambiar mi web?",
+                "acceptedAnswer": { "@type": "Answer", "text": "No. Platefy se integra en tu web actual y mantiene la experiencia de tu marca." }
+              },
+              {
+                "@type": "Question",
+                "name": "¿Cómo aprende Platefy mi carta?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Conectamos tu carta, horarios, ubicación y reglas del local. Tú decides qué sabe y cuándo se actualiza." }
+              },
+              {
+                "@type": "Question",
+                "name": "¿Funciona en varios idiomas?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Sí. Puede atender en varios idiomas y conservar el contexto de la carta y del restaurante." }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main" data-i18n="skip">Saltar al contenido</a>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="Platefy, inicio" data-i18n-aria="brand.home">
+          <span>platefy</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        </a>
+        <nav class="site-nav" id="site-navigation" aria-label="Navegación principal" data-i18n-aria="nav.label">
+          <a href="#producto" data-i18n="nav.product">Producto</a>
+          <a href="#como-funciona" data-i18n="nav.how">Cómo funciona</a>
+          <a href="#faq" data-i18n="nav.faq">FAQ</a>
+        </nav>
+        <div class="header-actions">
+          <label class="language-field">
+            <span class="sr-only" data-i18n="language">Idioma</span>
+            <select id="language-select" aria-label="Idioma">
+              <option value="es">ES</option>
+              <option value="en">EN</option>
+              <option value="ca">CA</option>
+            </select>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+          </label>
+          <a class="button button-dark header-cta" href="/chatbot/">
+            <span data-i18n="nav.try">Conoce a Platefy</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M7 5h8v8"/></svg>
+          </a>
+          <button class="menu-button" id="menu-button" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="site-navigation">
+            <span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow hero-eyebrow" data-i18n="hero.eyebrow">ASISTENTE PARA RESTAURANTES</p>
+        <h1 id="hero-title" data-i18n="hero.title">Tu restaurante, a una conversación de distancia.</h1>
+        <p class="hero-copy" data-i18n="hero.body">Responde, recomienda y orienta. Platefy atiende a cada cliente desde tu propia web.</p>
+        <div class="hero-actions">
+          <a class="button button-dark" href="/chatbot/">
+            <span data-i18n="hero.primary">Conoce a Platefy</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14M12 5l5 5-5 5"/></svg>
+          </a>
+          <a class="text-link" href="#como-funciona" data-i18n="hero.secondary">Ver cómo funciona</a>
+        </div>
+        <p class="hero-note" data-i18n="hero.note">Sin apps. En tu web. En su idioma.</p>
+      </section>
+
+      <section class="demo-wrap" id="producto" aria-labelledby="demo-title">
+        <div class="demo-stage reveal" role="group" aria-label="Vista del asistente Platefy conversando sobre la carta de un restaurante" data-i18n-aria="demo.aria">
+          <header class="demo-header">
+            <span class="eyebrow" data-i18n="demo.label">PRESENTACIÓN</span>
+            <span class="live-status"><i></i><span data-i18n="demo.status">Disponible ahora</span></span>
+          </header>
+          <div class="demo-grid">
+            <div class="orb-cell" role="img" aria-label="Mascota esférica de Platefy" data-i18n-aria="orb.aria">
+              <div class="landing-orb" aria-hidden="true">
+                <span class="landing-orb-halo"></span>
+                <span class="landing-orb-body"><img src="/images/platefy-orb.webp" alt="" width="1254" height="1254" fetchpriority="high"><i></i></span>
+                <span class="landing-orb-shadow"></span>
+              </div>
+            </div>
+            <div class="demo-conversation">
+              <p class="demo-hello" id="demo-title" data-i18n="demo.hello">Hola. Soy Platefy.</p>
+              <p class="demo-help" data-i18n="demo.help">¿En qué puedo ayudarte?</p>
+              <figure class="conversation-sample">
+                <blockquote data-i18n="demo.question">¿Qué me recomiendas sin lactosa?</blockquote>
+                <figcaption><span>Platefy</span><p data-i18n="demo.answer">Te recomiendo la ensalada de quinoa y aguacate: fresca, completa y sin lactosa.</p></figcaption>
+              </figure>
+            </div>
+            <aside class="knowledge-list" aria-labelledby="knowledge-title">
+              <p class="eyebrow" id="knowledge-title" data-i18n="demo.knows">CONOCE TU RESTAURANTE</p>
+              <ul>
+                <li><span>01</span><span data-i18n="demo.item1">Carta e ingredientes</span></li>
+                <li><span>02</span><span data-i18n="demo.item2">Horarios y local</span></li>
+                <li><span>03</span><span data-i18n="demo.item3">Preferencias y reservas</span></li>
+              </ul>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="intro-section section-pad reveal" aria-labelledby="intro-title">
+        <div>
+          <p class="eyebrow accent" data-i18n="intro.label">HOSPITALIDAD INTELIGENTE</p>
+          <h2 id="intro-title" data-i18n="intro.title">Cuida cada conversación. Desde la primera pregunta.</h2>
+        </div>
+        <div class="intro-copy">
+          <p data-i18n="intro.body">Platefy reúne la carta, los horarios y la forma de atender de tu restaurante para dar respuestas útiles, naturales y coherentes con tu marca.</p>
+          <a class="text-link" href="#como-funciona" data-i18n="intro.link">Descubre cómo funciona</a>
+        </div>
+      </section>
+
+      <section class="capabilities section-pad" aria-labelledby="capabilities-title">
+        <div class="section-lead reveal">
+          <p class="eyebrow accent" data-i18n="cap.label">LO QUE PUEDE HACER</p>
+          <h2 id="capabilities-title" data-i18n="cap.title">Todo lo que tu equipo sabe. Disponible al instante.</h2>
+        </div>
+        <div class="capability-rows">
+          <article class="capability-row reveal"><span>01</span><h3 data-i18n="cap.1.title">Menú inteligente</h3><p data-i18n="cap.1.body">Explica platos, ingredientes y preparaciones con contexto.</p><i>↗</i></article>
+          <article class="capability-row reveal"><span>02</span><h3 data-i18n="cap.2.title">Voz y chat</h3><p data-i18n="cap.2.body">Cada cliente elige la forma más cómoda de conversar.</p><i>↗</i></article>
+          <article class="capability-row reveal"><span>03</span><h3 data-i18n="cap.3.title">Recomendaciones</h3><p data-i18n="cap.3.body">Propone opciones que encajan con gustos y momento.</p><i>↗</i></article>
+          <article class="capability-row reveal"><span>04</span><h3 data-i18n="cap.4.title">Multidioma</h3><p data-i18n="cap.4.body">Mantiene la misma atención en varios idiomas.</p><i>↗</i></article>
+          <article class="capability-row reveal"><span>05</span><h3 data-i18n="cap.5.title">Presupuesto</h3><p data-i18n="cap.5.body">Ayuda a encontrar opciones según lo que quiere gastar.</p><i>↗</i></article>
+          <article class="capability-row reveal"><span>06</span><h3 data-i18n="cap.6.title">Alérgenos y dietas</h3><p data-i18n="cap.6.body">Aclara ingredientes para decidir con más confianza.</p><i>↗</i></article>
+        </div>
+      </section>
+
+      <section class="how-section" id="como-funciona" aria-labelledby="how-title">
+        <div class="how-inner section-pad">
+          <div class="section-lead reveal">
+            <p class="eyebrow" data-i18n="how.label">TRES PASOS</p>
+            <h2 id="how-title" data-i18n="how.title">Pregunta. Entiende. Recomienda.</h2>
+          </div>
+          <div class="steps">
+            <article class="step reveal"><span>01</span><h3 data-i18n="how.1.title">Pregunta</h3><p data-i18n="how.1.body">El cliente pregunta desde tu web, con sus propias palabras.</p></article>
+            <article class="step reveal"><span>02</span><h3 data-i18n="how.2.title">Entiende</h3><p data-i18n="how.2.body">Platefy conecta la consulta con la carta y el contexto del local.</p></article>
+            <article class="step reveal"><span>03</span><h3 data-i18n="how.3.title">Responde</h3><p data-i18n="how.3.body">Entrega una respuesta clara y una recomendación que encaja.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="menu-section section-pad reveal" aria-labelledby="menu-title">
+        <p class="eyebrow accent" data-i18n="menu.label">TAMBIÉN PREPARAMOS TU CARTA</p>
+        <div>
+          <h2 id="menu-title" data-i18n="menu.title">¿Necesitas una carta nueva?</h2>
+          <p data-i18n="menu.body">La diseñamos, ordenamos y dejamos lista para que Platefy la entienda desde el primer día. También podemos conectar la que ya tienes.</p>
+        </div>
+      </section>
+
+      <section class="faq-section section-pad" id="faq" aria-labelledby="faq-title">
+        <div class="faq-heading reveal">
+          <p class="eyebrow accent" data-i18n="faq.label">PREGUNTAS FRECUENTES</p>
+          <h2 id="faq-title" data-i18n="faq.title">Hablemos claro.</h2>
+        </div>
+        <div class="faq-list reveal">
+          <details name="platefy-faq"><summary><span data-i18n="faq.1.q">¿Tengo que cambiar mi web?</span><i>+</i></summary><p data-i18n="faq.1.a">No. Platefy se integra en tu web actual y mantiene la experiencia de tu marca.</p></details>
+          <details name="platefy-faq"><summary><span data-i18n="faq.2.q">¿Cómo aprende Platefy mi carta?</span><i>+</i></summary><p data-i18n="faq.2.a">Conectamos tu carta, horarios, ubicación y reglas del local. Tú decides qué sabe y cuándo se actualiza.</p></details>
+          <details name="platefy-faq"><summary><span data-i18n="faq.3.q">¿Funciona en varios idiomas?</span><i>+</i></summary><p data-i18n="faq.3.a">Sí. Puede atender en varios idiomas y conservar el contexto de la carta y del restaurante.</p></details>
+        </div>
+      </section>
+
+      <section class="closing-section" aria-labelledby="closing-title">
+        <p class="eyebrow" data-i18n="closing.label">UNA MEJOR BIENVENIDA</p>
+        <h2 id="closing-title" data-i18n="closing.title">Cada gran experiencia empieza con una buena conversación.</h2>
+        <a class="button button-light" href="/chatbot/">
+          <span data-i18n="closing.cta">Habla con Platefy</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14M12 5l5 5-5 5"/></svg>
+        </a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-top">
+        <div><a class="brand footer-brand" href="/" aria-label="Platefy, inicio" data-i18n-aria="brand.home"><span>platefy</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></a><p data-i18n="footer.note">IA para restaurantes, integrada en tu propia web.</p></div>
+        <nav aria-label="Navegación del pie de página" data-i18n-aria="footer.navLabel">
+          <a href="#producto" data-i18n="nav.product">Producto</a>
+          <a href="#como-funciona" data-i18n="nav.how">Cómo funciona</a>
+          <a href="#faq" data-i18n="nav.faq">FAQ</a>
+        </nav>
+        <a class="footer-chat" href="/chatbot/"><span data-i18n="footer.chat">Abrir chatbot</span><span>↗</span></a>
+      </div>
+      <div class="footer-bottom"><span data-i18n="footer.rights">© 2026 Platefy</span><span>Barcelona</span></div>
+    </footer>
+
+    <script type="module" src="/src/landing-static.ts"></script>
+  </body>
 </html>

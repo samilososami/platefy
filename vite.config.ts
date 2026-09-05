@@ -8,7 +8,7 @@ export default defineConfig({
         outDir: process.env.APPDEPLOY_VITE_OUT_DIR || 'dist',
         sourcemap: process.env.APPDEPLOY_VITE_SOURCEMAP === 'hidden' ? 'hidden' : false,
         rollupOptions: {
-            input: ['index.html', 'chatbot/index.html'],
+            input: ['index.html', 'chatbot/index.html', '404.html'],
             maxParallelFileOps: 128,
         },
     },
