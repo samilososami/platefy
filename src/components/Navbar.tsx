@@ -7,10 +7,9 @@ type NavbarProps = {
   copy: SiteCopy;
   locale: Locale;
   onLocaleChange: (locale: Locale) => void;
-  onDemo: () => void;
 };
 
-export function Navbar({ copy, locale, onLocaleChange, onDemo }: NavbarProps) {
+export function Navbar({ copy, locale, onLocaleChange }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const [, startTransition] = useTransition();
   const reduceMotion = useReducedMotion();
@@ -59,9 +58,9 @@ export function Navbar({ copy, locale, onLocaleChange, onDemo }: NavbarProps) {
               ))}
             </select>
           </label>
-          <button className="button button--dark nav-demo" type="button" onClick={onDemo}>
+          <a className="button button--dark nav-demo" href="/app">
             {copy.nav.demo}
-          </button>
+          </a>
           <button
             className="mobile-menu-button"
             type="button"
@@ -87,9 +86,9 @@ export function Navbar({ copy, locale, onLocaleChange, onDemo }: NavbarProps) {
             <a href="#como-funciona" onClick={close}>{copy.nav.how}</a>
             <a href="#beneficios" onClick={close}>{copy.nav.benefits}</a>
             <a href="#faq" onClick={close}>{copy.nav.faq}</a>
-            <button className="button button--dark" type="button" onClick={() => { close(); onDemo(); }}>
+            <a className="button button--dark" href="/app" onClick={close}>
               {copy.nav.demo}
-            </button>
+            </a>
           </motion.div>
         ) : null}
       </AnimatePresence>

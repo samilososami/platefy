@@ -37,4 +37,12 @@ describe("Platefy landing page", () => {
 
     expect(screen.getByText(/Conectamos tu carta, horarios, ubicación/)).toBeInTheDocument();
   });
+
+  it("links the landing demo CTAs to the mobile assistant", () => {
+    render(<App />);
+
+    const demoLinks = screen.getAllByRole("link", { name: /Ver una demo/ });
+    expect(demoLinks.length).toBeGreaterThan(0);
+    demoLinks.forEach((link) => expect(link).toHaveAttribute("href", "/app"));
+  });
 });

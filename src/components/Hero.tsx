@@ -7,10 +7,9 @@ import { AnimatedText } from "./AnimatedText";
 
 type HeroProps = {
   copy: SiteCopy["hero"];
-  onDemo: () => void;
 };
 
-export function Hero({ copy, onDemo }: HeroProps) {
+export function Hero({ copy }: HeroProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll();
@@ -42,10 +41,10 @@ export function Hero({ copy, onDemo }: HeroProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: reduceMotion ? 0 : 0.65, duration: reduceMotion ? 0 : 0.55 }}
         >
-          <button className="button button--dark button--large" type="button" onClick={onDemo}>
+          <a className="button button--dark button--large" href="/app">
             <span>{copy.demo}</span>
             <ArrowUpRight aria-hidden="true" />
-          </button>
+          </a>
           <a className="button button--outline button--large" href="#contacto">
             <span>{copy.talk}</span>
             <MessageCircle aria-hidden="true" />

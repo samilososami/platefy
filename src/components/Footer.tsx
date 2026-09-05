@@ -4,10 +4,9 @@ import type { Locale, SiteCopy } from "../content";
 type FooterProps = {
   copy: SiteCopy;
   locale: Locale;
-  onDemo: () => void;
 };
 
-export function Footer({ copy, locale, onDemo }: FooterProps) {
+export function Footer({ copy, locale }: FooterProps) {
   return (
     <footer className="site-footer">
       <div className="footer-cta">
@@ -15,9 +14,9 @@ export function Footer({ copy, locale, onDemo }: FooterProps) {
           {copy.cta.titleStart} <em>{copy.cta.titleAccent}</em>
         </h2>
         <div>
-          <button className="button button--dark button--large" type="button" onClick={onDemo}>
+          <a className="button button--dark button--large" href="/app">
             {copy.cta.demo}<ArrowUpRight aria-hidden="true" />
-          </button>
+          </a>
           <a href="#contacto" className="text-link">{copy.cta.talk}<ArrowUpRight aria-hidden="true" /></a>
         </div>
       </div>
