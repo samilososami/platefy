@@ -1,6 +1,9 @@
 # Platefy
 
-Platefy is a multilingual AI assistant concept for restaurant websites. It can answer contextual questions about menus, ingredients, allergens, location, opening hours and recommendations.
+Platefy es un asistente conversacional para restaurantes. Esta web contiene una demostración con una carta ficticia.
 
-Canonical URL: https://platefy.samilososami.com/
-Language options: Spanish, English and Catalan.
+Rutas principales:
+- https://platefy.samilososami.com/
+- https://platefy.samilososami.com/chatbot/
+
+La demostración no confirma reservas y no sustituye la información de alérgenos proporcionada por un restaurante real.

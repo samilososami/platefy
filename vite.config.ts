@@ -1,16 +1,15 @@
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [react()],
-  build: {
-    target: "es2022",
-    cssMinify: "lightningcss",
-    sourcemap: true,
-  },
-  test: {
-    environment: "jsdom",
-    setupFiles: "./src/test/setup.ts",
-    css: true,
-  },
+    plugins: [react()],
+    base: './',
+    build: {
+        outDir: process.env.APPDEPLOY_VITE_OUT_DIR || 'dist',
+        sourcemap: process.env.APPDEPLOY_VITE_SOURCEMAP === 'hidden' ? 'hidden' : false,
+        rollupOptions: {
+            input: ['index.html', 'chatbot/index.html'],
+            maxParallelFileOps: 128,
+        },
+    },
 });

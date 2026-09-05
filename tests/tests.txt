@@ -1,0 +1,60 @@
+# Tests
+
+## Test 1 - Explore the sample restaurant and start a fresh conversation [sanity]
+Viewport: desktop (1280x800)
+Covers: landing-to-chatbot navigation, welcome transition, real desktop layout, sample menu and hours, dialog close, new conversation
+Description: A visitor can enter Platefy, inspect the fictional restaurant facts and return to the conversation.
+Steps:
+1. Open the homepage and click Conoce a Platefy.
+2. If the welcome screen appears, use its primary start button.
+3. Open Carta del restaurante in the side navigation.
+4. Check the four sample dishes and euro prices, then close the panel.
+5. Open Horarios y local and check the lunch and dinner service times, then close it.
+6. Start Nueva conversación.
+Expected: The menu contains tartare, mushroom rice, seasonal soup and quinoa salad. Hours include 13:00–16:00 and 20:00–23:30. A new conversation has an empty editable composer and no previous messages. The desktop view uses the available width instead of a phone frame.
+
+## Test 2 - Change language and use FAQ on a phone
+Viewport: mobile (375x667)
+Covers: mobile navigation, language persistence, FAQ accordion, responsive landing and chatbot route
+Description: Language and navigation remain usable on a phone.
+Steps:
+1. Open the homepage and change Idioma to EN.
+2. Open the mobile navigation and navigate to FAQ.
+3. Expand the question about changing an existing website.
+4. Read the answer, return to the top and use Meet Platefy.
+5. Reload the chatbot page and enter through its welcome screen if needed.
+Expected: The FAQ answer explains that Platefy integrates into the current site. Language remains English after navigating and reloading. The chatbot and composer fit the phone without horizontal overflow, and no device mockup surrounds the conversation.
+
+## Test 3 - Ask the real cloud assistant or show a truthful provider limit
+Viewport: desktop (1280x800)
+Covers: real external Qwen request, conversation answer, request failure and retry availability, editable composer, no simulated answer fallback
+Description: An actual external request must produce a useful answer or an honest provider availability message.
+Steps:
+1. Open the chatbot, choose ES and enter the conversation.
+2. Type Qué platos veganos cuestan menos de 15 euros? and send it once.
+3. Wait for completion, allowing up to 65 seconds for the public provider.
+Expected: The user question remains visible. If the public provider is available, a real Spanish answer mentions dishes from the sample menu. If quota or provider availability prevents generation, a clear error is shown with a retry action and no fabricated assistant answer. Loading ends and the composer becomes usable. Do not retry repeatedly when quota is exhausted.
+
+## Test 4 - Prevent blank messages and cancel active work
+Viewport: mobile (375x667)
+Covers: empty-input guardrail, suggestion insertion, request cancellation, reset, mobile chat controls
+Description: Empty input creates no message, and cancelled work cannot add a stale reply to a fresh chat.
+Steps:
+1. Open the chatbot in Spanish and enter the conversation.
+2. Leave the composer empty or enter spaces only.
+3. Check that sending is disabled.
+4. Select a suggestion and send a question, then cancel if a request remains active.
+5. Start a new conversation using the navigation menu.
+Expected: Whitespace never creates a message. Suggestions fill the composer or submit the selected question according to the UI. Cancellation or reset ends active work. The fresh conversation is empty and receives no stale reply from the cancelled request.
+
+## Test 5 - Voice permission and provider information are explicit
+Viewport: desktop (1280x800)
+Covers: microphone capability/permission error, audio opt-in, optional provider disclosure, unavailable Catalan voice
+Description: Voice has visible controls and honest limitations, without fabricated transcripts.
+Steps:
+1. Open the chatbot in Spanish. Before entering the conversation, use Escuchar mi voz once: real audio should play or a provider error should appear. Enter the conversation.
+2. Open the information about this experience and read the provider and sample-data notes, then close it.
+3. Try the microphone. Deny permission if prompted, or observe the unsupported-recognition message in a browser without speech recognition.
+4. Check that no invented transcript appears. If permission remains pending, the status says it is waiting for microphone permission, not listening. Cancel that request.
+5. Inspect the sound toggle and activate/deactivate it.
+Expected: Information identifies a demonstration restaurant and cloud AI. Microphone denial or unsupported recognition produces a helpful message and leaves text chat available. Sound is opt-in and can be turned off; no audio plays automatically merely from loading the page.
