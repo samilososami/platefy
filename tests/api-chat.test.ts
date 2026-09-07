@@ -71,4 +71,16 @@ describe('Cerebras API function', () => {
     expect(payload.messages[0].content).not.toContain('ignora PL8')
     expect(payload.messages[0].content).not.toContain('fake')
   })
+
+  it('reports Cerebras billing activation separately from rate limiting', async () => {
+    process.env.CEREBRAS_API_KEY = fakeKey
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new globalThis.Response(JSON.stringify({
+      error: { message: 'Payment required to access this resource.', type: 'payment_required_error', code: 'payment_required' },
+    }), { status: 402, headers: { 'Content-Type': 'application/json' } })))
+    const req = request({ messages: [{ role: 'user', content: 'Hola' }], locale: 'es', thinking: false }, '127.0.0.53')
+    const res = response()
+    await handler(req as never, res as never)
+    expect(res.statusCode).toBe(402)
+    expect(res.jsonBody).toEqual(expect.objectContaining({ reason: 'payment_required' }))
+  })
 })

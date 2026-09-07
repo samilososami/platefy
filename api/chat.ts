@@ -120,7 +120,8 @@ function validateAnswer(answer: string, filter: FilterResult, menu: Menu, langua
 }
 function upstreamError(status: number, detail = '') {
   if (status === 401 || status === 403) return { status: 401, message: 'Cerebras rejected the API key.', reason: 'authentication' }
-  if (status === 429 || status === 402) {
+  if (status === 402) return { status: 402, message: 'The Cerebras account requires billing activation.', reason: 'payment_required' }
+  if (status === 429) {
     const unavailableCredits = /credit|billing|payment|trial|quota|limit.*exceed|insufficient/i.test(detail)
     return { status: 429, message: unavailableCredits ? 'The Cerebras account has no available quota.' : 'Cerebras is temporarily rate limited.', reason: unavailableCredits ? 'quota_unavailable' : 'rate_limit' }
   }

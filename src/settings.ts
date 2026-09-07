@@ -77,7 +77,7 @@ form.addEventListener('submit', async event => {
     setResult('Conexión verificada. Cerebras ha respondido correctamente.', 'success')
   } catch (error) {
     const reason = error instanceof Error ? error.message : ''
-    setResult(reason === 'authentication' || reason === '401' ? 'Cerebras ha rechazado la clave.' : reason === 'quota_unavailable' ? 'La cuenta no tiene cuota disponible. Activa créditos en Cerebras o prueba otra clave.' : reason === 'rate_limit' || reason === '429' ? 'La cuota está ocupada. Espera un minuto y vuelve a probar.' : 'No se ha podido completar la prueba.', 'error')
+    setResult(reason === 'authentication' || reason === '401' ? 'Cerebras ha rechazado la clave.' : reason === 'payment_required' || reason === '402' ? 'La cuenta requiere activar la facturación en Cerebras. También puedes probar otra clave activa.' : reason === 'quota_unavailable' ? 'La cuenta no tiene cuota disponible. Activa créditos en Cerebras o prueba otra clave.' : reason === 'rate_limit' || reason === '429' ? 'La cuota está ocupada. Espera un minuto y vuelve a probar.' : 'No se ha podido completar la prueba.', 'error')
   }
 })
 
