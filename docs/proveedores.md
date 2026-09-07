@@ -1,42 +1,26 @@
-# Platefy static AI provider validation
+# Proveedores y ejecución
 
-Checked 5 September 2026. All tests below used anonymous, documented public Gradio APIs without tokens, cookies, local model execution or a backend.
+## Texto: Qwen2.5 + WebLLM
 
-## Selected integration
+El chat usa [`Qwen2.5-1.5B-Instruct-q4f16_1-MLC`](https://huggingface.co/mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC) con `@mlc-ai/web-llm` 0.2.84. La inferencia ocurre en un Web Worker del navegador y no requiere API, cuenta ni servidor. El modelo necesita WebGPU, una ventana de 4.096 tokens y aproximadamente 1.629,75 MB de VRAM según la configuración oficial de WebLLM.
 
-- Text: [akhaliq/Qwen3-VL-4B-Instruct](https://huggingface.co/spaces/akhaliq/Qwen3-VL-4B-Instruct), hosted model `Qwen/Qwen3-VL-4B-Instruct`. Public `/chat_fn` accepts `[{text, files: []}, history]`. Result index 1 is the updated history; the final assistant message is the answer. The Space does not accept a system role, so the adapter supplies fixed sample restaurant instructions with each current question. Real completed answers, no simulated answer fallback or token streaming.
-- Spanish speech: [leonelhs/kokoro-tts-spanish](https://huggingface.co/spaces/leonelhs/kokoro-tts-spanish), cloud Kokoro voice `ef_dora`, `/predict`, `[text, 'ef_dora', 1]`. Result index 0 contains the generated audio URL.
-- English speech: [remsky/Kokoro-TTS-Zero](https://huggingface.co/spaces/remsky/Kokoro-TTS-Zero), voice `af_sky`, `/generate_speech_from_ui`, `[text, ['af_sky'], 1]`. Result index 0 contains audio. Other output (a waveform plot) is ignored.
-- Catalan text is supported through the model. No verified native Catalan cloud voice was found in these providers; the adapter returns `UNSUPPORTED_LANGUAGE`, preserves the written answer and gives an honest localized notice. It does not silently mispronounce Catalan with a Spanish voice.
+El paquete pesado se importa de forma diferida al hacer la primera consulta. Los pesos se descargan desde el repositorio MLC oficial y WebLLM los mantiene en la caché del navegador. La interfaz informa del progreso y conserva la posibilidad de cancelar la generación.
 
-The [Hugging Face public API documentation](https://huggingface.co/docs/hub/en/spaces-api-endpoints) explicitly documents direct JavaScript/HTTP integration and no-token use of public Spaces. It lists anonymous ZeroGPU access as a shared pool with an included daily quota of 2 minutes; account tiers differ. This is a shared demo service with queues, sleep, rate limits and no uptime commitment. The Spanish CPU Space is not a ZeroGPU model, but is still subject to hosting and queue availability. An exhausted allowance is reported to the user, never bypassed.
+Qwen2.5 Instruct no ofrece el interruptor nativo de pensamiento que tienen modelos posteriores. El control de la interfaz se muestra desactivado con esa explicación y la arquitectura ya acepta el parámetro para un futuro modelo compatible. No se simula ni se muestra razonamiento interno.
 
-## Measured live results
+## Contexto y seguridad de carta
 
-| Check | Observed result |
-|---|---|
-| Text generation | HTTP 200 POST + SSE complete in 4.50 s. Spanish prompt asking for a Mediterranean vegetarian dish generated a natural Spanish gazpacho recommendation. |
-| Spanish voice generation | HTTP 200 POST + SSE complete in 3.87 s. “Hola, soy Platefy. ¿Qué te apetece comer hoy?” produced WAV audio. |
-| Spanish audio download | HTTP 200, 124,972 bytes; valid WAV, mono, 24 kHz, duration 2.603 s. |
-| English voice generation | HTTP 200 POST + SSE complete in 3.99 s. “Hello, I am Platefy. What would you like to eat today?” produced a hosted WAV URL. |
-| Browser preflight | Both selected text and Spanish speech POST endpoints accepted OPTIONS with Origin `https://example.com`, method POST, header content-type; response 200 with corresponding access-control-allow headers. |
-| Browser cross-origin responses | Text and both speech POST/SSE responses reflected `Access-Control-Allow-Origin: https://example.com`. Spanish audio file GET also reflected Origin. |
-| Full app adapter with menu context | A request for vegan dishes below €15 generated a Spanish reply in 5.42 s with the fixture's tartare (€8.50) and soup (€6.00). The next request hit shared GPU quota, correctly classified as `RATE_LIMIT` by the adapter. No fake answer was substituted. |
+Las únicas fuentes son:
 
-These results verify remote generation and CORS, not subjective voice quality on every device. Actual browser playback/microphone permissions, mobile autoplay and UI need separate verification. Set `audio.crossOrigin = 'anonymous'` before assigning its URL if attaching a Web Audio analyser.
+- `/menu/MENU.json`: 34 referencias ficticias con categoría, precio, descripción, ingredientes, alérgenos, dietas y disponibilidad.
+- `/menu/PL8.md`: identidad, tono y reglas de PL8.
 
-The anonymous quota was reached during these bounded tests on the development network. It can therefore prevent immediate further live checks until the provider grants availability again; do not repeatedly retry or rotate identities to evade it. Model grounding is a prompt constraint, not a guarantee: the 4B model can still make mistakes, and actual bookings or allergy guarantees are deliberately outside the application.
+Antes de invocar Qwen, `src/services/restaurant.ts` filtra datos estructurados por alérgenos, dieta, presupuesto y categoría. Para una consulta sensible, el modelo solo recibe los candidatos que superan ese filtro. La salida se rechaza si menciona un plato conocido que el filtro había excluido y siempre incorpora la indicación de confirmar trazas y contaminación cruzada. Esto reduce el riesgo, pero no convierte una demostración en certificación médica.
 
-## Other providers checked
+## Voz
 
-- [Puter security documentation](https://docs.puter.com/security/) requires website users to authorize/sign in with Puter before cloud services. It has no developer API key. [User-pays documentation](https://docs.puter.com/user-pays-model/) says users receive a monthly free allowance and are offered an upgrade when it runs out. Thus it is not a frictionless anonymous free restaurant chatbot. [TTS docs](https://docs.puter.com/AI/txt2speech/) include high-quality cloud speech providers, but the same user allowance applies. Not used.
-- [Pollinations current documentation](https://pollinations.ai/docs) explicitly requires an API key for every generation. Old `text.pollinations.ai` keyless tutorials do not describe the current supported API. Not used.
-- Qwen's official 235B demo Space was running but its public generation endpoint returned `event: error, data: null` in a harmless test. No attempt was made to work around this. The smaller independently tested Qwen3 Instruct endpoint was selected.
+- Español: [Kokoro TTS Spanish](https://huggingface.co/spaces/leonelhs/kokoro-tts-spanish), voz `ef_dora`.
+- Inglés: [Kokoro TTS Zero](https://huggingface.co/spaces/remsky/Kokoro-TTS-Zero), voz `af_sky`.
+- Entrada: `SpeechRecognition` o `webkitSpeechRecognition` del navegador.
 
-## App handling
-
-`src/services/gradio.ts` implements streaming SSE parsing, a 60-second timeout, network abort, bounded event sizes, and typed quota/provider errors. Cancelling aborts the browser fetch; an already queued remote GPU job may continue at the provider. No automatic retries consume additional quota.
-
-`src/services/restaurant.ts` is the canonical fictional dataset shared by UI and model context. The four names and kitchen hours come from the existing Platefy demo; the prices and detailed recipes are newly created sample data. No real restaurant address or availability is implied. Allergies and cross-contamination are never certified, and no booking can be confirmed or sent.
-
-Run networking parser/cancellation checks with `node --test tests/gradio.test.mjs` (Node 24, native TypeScript stripping). These checks mock transport intentionally and do not consume cloud quota.
+El audio es opcional. Solo al activarlo se envía el texto de una respuesta al Space de voz. No hay voz catalana verificada; el chat escrito sigue disponible.

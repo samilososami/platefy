@@ -1,4 +1,4 @@
-export type ProviderErrorCode = 'ABORTED' | 'TIMEOUT' | 'RATE_LIMIT' | 'UNAVAILABLE' | 'INVALID_RESPONSE' | 'UNSUPPORTED_LANGUAGE'
+export type ProviderErrorCode = 'ABORTED' | 'TIMEOUT' | 'RATE_LIMIT' | 'UNAVAILABLE' | 'INVALID_RESPONSE' | 'UNSUPPORTED_LANGUAGE' | 'UNSUPPORTED_BROWSER' | 'KNOWLEDGE_UNAVAILABLE'
 
 export class ProviderError extends Error {
   readonly code: ProviderErrorCode

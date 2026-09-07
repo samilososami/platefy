@@ -7,5 +7,7 @@ Rutas principales:
 - https://platefy.samilososami.com/en/ — versión en inglés de la web del producto.
 - https://platefy.samilososami.com/ca/ — versión en catalán de la web del producto.
 - https://platefy.samilososami.com/chatbot/ — demostración interactiva con una carta ficticia.
+- https://platefy.samilososami.com/menu/MENU.json — carta ficticia estructurada usada por la demostración.
+- https://platefy.samilososami.com/menu/PL8.md — identidad y reglas de comportamiento de PL8.
 
-La demostración usa un restaurante de ejemplo. No confirma reservas reales y la información definitiva de alérgenos debe proceder de cada restaurante.
+La demostración usa Qwen2.5 1.5B mediante WebLLM dentro del navegador. No confirma reservas reales y la información definitiva de alérgenos debe proceder de cada restaurante.

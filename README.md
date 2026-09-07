@@ -8,7 +8,7 @@ Sitio web de Platefy y demostración del asistente de IA para restaurantes.
 
 ## Desarrollo
 
-Requiere Node.js 24 y npm. El proyecto no necesita claves de API ni modelos locales.
+Requiere Node.js 24 y npm. El proyecto no necesita claves de API ni un servidor de inferencia.
 
 ```sh
 ./run.sh install
@@ -21,9 +21,13 @@ Requiere Node.js 24 y npm. El proyecto no necesita claves de API ni modelos loca
 
 React 19, TypeScript y Vite. La compilación genera dos entradas estáticas: `/` y `/chatbot/`. La interfaz está disponible en español, inglés y catalán, con diseño adaptable a móvil y escritorio.
 
-El chat usa un modelo Qwen alojado en un Space público de Hugging Face. La voz española e inglesa se genera con Kokoro y la entrada hablada usa el reconocimiento del navegador. Los proveedores gratuitos tienen cuotas y disponibilidad compartidas; la interfaz muestra sus errores sin sustituirlos por respuestas simuladas. La voz catalana no está disponible en los proveedores verificados.
+El chat ejecuta `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` dentro del navegador mediante WebLLM y un Web Worker. El modelo requiere WebGPU, usa aproximadamente 1.630 MB de VRAM y se conserva en la caché del navegador después de la primera descarga. La interfaz principal se carga sin incluir el motor: el paquete de WebLLM y sus pesos se solicitan al hacer la primera pregunta.
 
-La carta, los precios y los horarios de la demostración son ficticios. No se confirman reservas ni se ofrecen garantías sobre alérgenos. El historial permanece en memoria y desaparece al recargar; únicamente se conserva el idioma en el navegador.
+Las únicas fuentes de conocimiento son [`public/menu/MENU.json`](./public/menu/MENU.json) y [`public/menu/PL8.md`](./public/menu/PL8.md). JavaScript filtra primero restricciones de alérgenos, dieta, categoría y presupuesto; Qwen redacta usando solo los candidatos verificados. Qwen2.5 no expone un modo de pensamiento nativo, por lo que el control aparece desactivado y queda preparado para modelos futuros que sí lo admitan.
+
+La voz española e inglesa se genera con Kokoro y la entrada hablada usa el reconocimiento del navegador. El texto solo sale del dispositivo si el usuario activa la voz. La voz catalana no está disponible en los proveedores verificados.
+
+La carta, los precios y los horarios de la demostración son ficticios. No se confirman reservas ni se ofrecen garantías sobre alérgenos. El historial permanece en memoria y desaparece al recargar; únicamente se conserva el idioma y la caché del modelo en el navegador.
 
 ## Despliegue
 
