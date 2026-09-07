@@ -8,7 +8,7 @@
 
 - Transporte y cancelación del proveedor de voz: 6 pruebas.
 - Ciclo de micrófono, permisos y entrada vacía: 4 pruebas.
-- Filtrado de carta: 6 pruebas para restricciones combinadas, alergias, dieta, categoría, presupuesto, plato nominal y consulta amplia.
+- Filtrado de carta: 8 pruebas para restricciones combinadas en español, inglés y catalán, alergias, dieta, categoría, presupuesto, plato nominal y consulta amplia.
 - TypeScript y build de producción sin mapas de fuentes.
 
 El caso `sin gluten + sin frutos secos + carne + menos de 14 €` devuelve determinísticamente solo `pollo-limon` y `smash-bacon` antes de llamar al modelo.
