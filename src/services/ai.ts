@@ -1,33 +1,29 @@
-import type { MLCEngineInterface } from '@mlc-ai/web-llm'
-import { callGradio, ProviderError } from './gradio'
-import { getGroundedContext, loadRestaurantKnowledge, restaurantLocale } from './restaurant'
+import { callGradio, ProviderError, SseParser } from './gradio'
+import { loadRestaurantKnowledge, restaurantLocale } from './restaurant'
+import { getBrowserApiKey } from './cerebras-key'
 
 export { ProviderError } from './gradio'
 export type { ProviderErrorCode } from './gradio'
 
 export interface ChatMessage { role: 'user' | 'assistant'; content: string }
-export type ModelPhase = 'idle' | 'loading-menu' | 'menu-ready' | 'loading-model' | 'ready' | 'generating' | 'error'
+export type ModelPhase = 'idle' | 'loading-menu' | 'menu-ready' | 'connecting' | 'ready' | 'generating' | 'error'
 export interface ModelStatus { phase: ModelPhase; progress: number; text: string }
 export interface InferenceMetrics {
   model: string
-  modelLoadMs: number | null
+  provider: string
   responseMs: number
   firstTokenMs: number | null
   promptTokens: number | null
   completionTokens: number | null
   tokensPerSecond: number | null
-  estimatedVramMB: number
-  jsHeapDeltaMB: number | null
-  runtime: string | null
+  reasoning: 'low' | 'medium'
 }
 
 export const MODEL_INFO = {
-  id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC',
-  name: 'Qwen2.5 1.5B Instruct · Q4',
-  page: 'https://huggingface.co/mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC',
-  estimatedVramMB: 1629.75,
-  contextWindow: 4096,
-  thinking: false,
+  id: 'gpt-oss-120b',
+  name: 'GPT-OSS 120B · Cerebras',
+  page: 'https://inference-docs.cerebras.ai/models/gpt-oss',
+  thinking: true,
 } as const
 
 export const AI_PROVIDERS = {
@@ -36,23 +32,13 @@ export const AI_PROVIDERS = {
   speechEnglish: { name: 'Kokoro · Sky', space: 'https://huggingface.co/spaces/remsky/Kokoro-TTS-Zero', endpoint: 'https://remsky-kokoro-tts-zero.hf.space/gradio_api/call/generate_speech_from_ui' },
 } as const
 
-let enginePromise: Promise<MLCEngineInterface> | null = null
-let engine: MLCEngineInterface | null = null
-let worker: Worker | null = null
-let modelLoadMs: number | null = null
 let status: ModelStatus = { phase: 'idle', progress: 0, text: 'Carta pendiente' }
 let metrics: InferenceMetrics | null = null
 const statusListeners = new Set<(next: ModelStatus) => void>()
 const metricsListeners = new Set<(next: InferenceMetrics | null) => void>()
 
-function publishStatus(next: ModelStatus) {
-  status = next
-  statusListeners.forEach(listener => listener(next))
-}
-function publishMetrics(next: InferenceMetrics | null) {
-  metrics = next
-  metricsListeners.forEach(listener => listener(next))
-}
+function publishStatus(next: ModelStatus) { status = next; statusListeners.forEach(listener => listener(next)) }
+function publishMetrics(next: InferenceMetrics | null) { metrics = next; metricsListeners.forEach(listener => listener(next)) }
 export function getModelStatus() { return status }
 export function getInferenceMetrics() { return metrics }
 export function subscribeModelStatus(listener: (next: ModelStatus) => void) { statusListeners.add(listener); return () => statusListeners.delete(listener) }
@@ -62,7 +48,7 @@ export async function prepareKnowledge() {
   publishStatus({ phase: 'loading-menu', progress: 0, text: 'Cargando MENU.json y PL8.md' })
   try {
     const knowledge = await loadRestaurantKnowledge()
-    publishStatus({ phase: engine ? 'ready' : 'menu-ready', progress: engine ? 1 : 0, text: `${knowledge.menu.platos.length} referencias de carta listas` })
+    publishStatus({ phase: 'menu-ready', progress: 1, text: `${knowledge.menu.platos.length} referencias verificadas` })
     return knowledge
   } catch (error) {
     publishStatus({ phase: 'error', progress: 0, text: 'No se ha podido cargar la carta' })
@@ -70,39 +56,6 @@ export async function prepareKnowledge() {
   }
 }
 
-async function getEngine(): Promise<MLCEngineInterface> {
-  if (engine) return engine
-  const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }).gpu
-  if (!gpu || !(await gpu.requestAdapter())) {
-    publishStatus({ phase: 'error', progress: 0, text: 'No hay un adaptador WebGPU disponible' })
-    throw new ProviderError('UNSUPPORTED_BROWSER', 'A WebGPU adapter is unavailable.')
-  }
-  if (enginePromise) return enginePromise
-  const startedAt = performance.now()
-  publishStatus({ phase: 'loading-model', progress: 0, text: 'Preparando Qwen en este dispositivo' })
-  enginePromise = import('@mlc-ai/web-llm').then(async webllm => {
-    worker = new Worker(new URL('./webllm.worker.ts', import.meta.url), { type: 'module', name: 'platefy-qwen' })
-    const loaded = await webllm.CreateWebWorkerMLCEngine(worker, MODEL_INFO.id, {
-      logLevel: 'WARN',
-      initProgressCallback: report => publishStatus({
-        phase: 'loading-model', progress: Math.max(0, Math.min(1, report.progress)),
-        text: report.text || 'Descargando el modelo en el navegador',
-      }),
-    }, { context_window_size: MODEL_INFO.contextWindow })
-    modelLoadMs = performance.now() - startedAt
-    engine = loaded
-    publishStatus({ phase: 'ready', progress: 1, text: 'Qwen listo en este dispositivo' })
-    return loaded
-  }).catch(error => {
-    enginePromise = null; engine = null; worker?.terminate(); worker = null
-    publishStatus({ phase: 'error', progress: 0, text: 'No se ha podido iniciar Qwen' })
-    throw error
-  })
-  return enginePromise
-}
-
-type MemoryPerformance = Performance & { memory?: { usedJSHeapSize: number } }
-function heapUsed() { return (performance as MemoryPerformance).memory?.usedJSHeapSize ?? null }
 function cleanText(value: string) {
   const text = value.replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '').replace(/<think(?:ing)?>[\s\S]*$/gi, '')
     .replace(/^```(?:json)?|```$/gim, '').trim()
@@ -112,87 +65,80 @@ function cleanText(value: string) {
 function cleanPartialText(value: string) {
   return value.replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '').replace(/<think(?:ing)?>[\s\S]*$/gi, '').trim()
 }
-function normalized(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() }
 
-export async function generateReply(messages: ChatMessage[], locale: string, signal: AbortSignal, onProgress?: (text: string) => void, _thinking = false): Promise<string> {
+type CerebrasChunk = {
+  choices?: Array<{ delta?: { content?: string; reasoning?: string } }>
+  usage?: { prompt_tokens?: number; completion_tokens?: number }
+  time_info?: { completion_time?: number }
+  platefy_metrics?: { provider_first_token_ms?: number | null }
+}
+
+function responseError(statusCode: number): ProviderError {
+  if (statusCode === 429 || statusCode === 402) return new ProviderError('RATE_LIMIT', 'Cerebras quota reached.')
+  if (statusCode === 401 || statusCode === 403) return new ProviderError('AUTH', 'Cerebras rejected the API key.')
+  return new ProviderError('UNAVAILABLE', `Cerebras could not complete the request (${statusCode}).`)
+}
+
+export async function generateReply(messages: ChatMessage[], locale: string, signal: AbortSignal, onProgress?: (text: string) => void, thinking = false): Promise<string> {
   if (!messages.length || messages[messages.length - 1].role !== 'user') throw new ProviderError('INVALID_RESPONSE', 'A user question is required.')
-  const recent = messages.slice(-5).map(message => ({ role: message.role, content: message.content.trim().slice(0, 1000) }))
-  const question = recent[recent.length - 1].content
-  if (!question) throw new ProviderError('INVALID_RESPONSE', 'A user question is required.')
+  const recent = messages.slice(-7).map(message => ({ role: message.role, content: message.content.trim().slice(0, 1600) }))
+  if (!recent[recent.length - 1].content) throw new ProviderError('INVALID_RESPONSE', 'A user question is required.')
 
-  publishStatus({ phase: 'loading-menu', progress: 0, text: 'Comprobando la carta' })
-  let knowledge
-  try {
-    knowledge = await loadRestaurantKnowledge()
-    publishStatus({ phase: engine ? 'ready' : 'menu-ready', progress: engine ? 1 : 0, text: `${knowledge.menu.platos.length} referencias de carta listas` })
-  } catch { throw new ProviderError('KNOWLEDGE_UNAVAILABLE', 'The menu could not be loaded.') }
-  const grounded = getGroundedContext(knowledge, question)
-  const runtime = await getEngine()
-  if (signal.aborted) throw new ProviderError('ABORTED', 'Request cancelled.')
-
+  publishStatus({ phase: 'connecting', progress: 1, text: thinking ? 'Cerebras está razonando' : 'Consultando a Cerebras' })
   const startedAt = performance.now()
-  const heapBefore = heapUsed()
   let firstTokenMs: number | null = null
   let answer = ''
-  let usage: { prompt_tokens?: number; completion_tokens?: number; extra?: { decode_tokens_per_s?: number } } | undefined
-  const abort = () => runtime.interruptGenerate()
-  signal.addEventListener('abort', abort, { once: true })
-  publishStatus({ phase: 'generating', progress: 1, text: 'Generando en tu dispositivo' })
-  try {
-    const stream = await runtime.chat.completions.create({
-      messages: [
-        { role: 'system', content: grounded.system },
-        ...recent.slice(0, -1),
-        { role: 'user', content: question },
-      ],
-      temperature: 0.1, top_p: 0.85, repetition_penalty: 1.08, max_tokens: 220,
-      stream: true, stream_options: { include_usage: true },
-    })
-    for await (const chunk of stream) {
-      if (signal.aborted) throw new ProviderError('ABORTED', 'Request cancelled.')
-      const token = chunk.choices[0]?.delta?.content ?? ''
-      if (token && firstTokenMs === null) firstTokenMs = performance.now() - startedAt
-      answer += token
-      if (chunk.usage) usage = chunk.usage
-      if (token) {
-        const partial = cleanPartialText(answer)
-        if (partial) onProgress?.(partial)
-      }
-    }
-    if (signal.aborted) throw new ProviderError('ABORTED', 'Request cancelled.')
-    answer = cleanText(answer)
+  let usage: CerebrasChunk['usage']
+  let providerCompletionTime: number | null = null
+  const browserKey = getBrowserApiKey()
 
-    // Reject any known dish that deterministic filtering removed from the candidate set.
-    if (grounded.filter.applied.length) {
-      const allowed = new Set(grounded.filter.dishes.map(dish => dish.id))
-      const output = normalized(answer)
-      const disallowed = knowledge.menu.platos.find(dish => output.includes(normalized(dish.nombre)) && !allowed.has(dish.id))
-      if (disallowed) throw new ProviderError('INVALID_RESPONSE', 'The model recommended a dish outside the verified filter.')
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      credentials: 'same-origin', cache: 'no-store', signal,
+      body: JSON.stringify({ messages: recent, locale: restaurantLocale(locale), thinking, apiKey: browserKey || undefined }),
+    })
+    if (!response.ok) throw responseError(response.status)
+    if (!response.body) throw new ProviderError('INVALID_RESPONSE', 'Cerebras returned an empty stream.')
+
+    publishStatus({ phase: 'generating', progress: 1, text: thinking ? 'Razonando sobre la carta' : 'Preparando tu recomendación' })
+    const parser = new SseParser()
+    const decoder = new TextDecoder()
+    const reader = response.body.getReader()
+    while (true) {
+      const { done, value } = await reader.read()
+      const events = parser.push(done ? decoder.decode() : decoder.decode(value, { stream: true }), done)
+      for (const event of events) {
+        if (event.data === '[DONE]') continue
+        let chunk: CerebrasChunk
+        try { chunk = JSON.parse(event.data) as CerebrasChunk } catch { throw new ProviderError('INVALID_RESPONSE', 'Cerebras returned malformed streaming data.') }
+        const token = chunk.choices?.[0]?.delta?.content ?? ''
+        if (token && firstTokenMs === null) firstTokenMs = performance.now() - startedAt
+        if (token) { answer += token; const partial = cleanPartialText(answer); if (partial) onProgress?.(partial) }
+        if (chunk.usage) usage = chunk.usage
+        if (typeof chunk.time_info?.completion_time === 'number') providerCompletionTime = chunk.time_info.completion_time
+        if (typeof chunk.platefy_metrics?.provider_first_token_ms === 'number') firstTokenMs = chunk.platefy_metrics.provider_first_token_ms
+      }
+      if (done) break
     }
-    if (grounded.filter.isSafetyQuestion && !/traza|contamin|personal|equipo|restaurant|seguridad|confirm/i.test(answer)) {
-      answer += restaurantLocale(locale) === 'en'
-        ? '\n\nPlease confirm traces, cross-contamination and safety with the restaurant team.'
-        : restaurantLocale(locale) === 'ca'
-          ? '\n\nConfirma les traces, la contaminació creuada i la seguretat amb l’equip del restaurant.'
-          : '\n\nConfirma las trazas, la contaminación cruzada y la seguridad con el equipo del restaurante.'
-    }
+    answer = cleanText(answer)
     const responseMs = performance.now() - startedAt
-    const heapAfter = heapUsed()
-    let runtimeText: string | null = null
-    try { runtimeText = await runtime.runtimeStatsText() } catch { /* Metrics are best effort. */ }
-    publishMetrics({ model: MODEL_INFO.id, modelLoadMs, responseMs, firstTokenMs,
-      promptTokens: usage?.prompt_tokens ?? null, completionTokens: usage?.completion_tokens ?? null,
-      tokensPerSecond: usage?.extra?.decode_tokens_per_s ?? null, estimatedVramMB: MODEL_INFO.estimatedVramMB,
-      jsHeapDeltaMB: heapBefore !== null && heapAfter !== null ? (heapAfter - heapBefore) / 1_048_576 : null, runtime: runtimeText })
-    publishStatus({ phase: 'ready', progress: 1, text: 'Qwen listo en este dispositivo' })
+    const completionTokens = usage?.completion_tokens ?? null
+    const generationSeconds = providerCompletionTime ?? (firstTokenMs === null ? 0 : Math.max((responseMs - firstTokenMs) / 1000, 0.001))
+    publishMetrics({
+      model: MODEL_INFO.id, provider: 'Cerebras', responseMs, firstTokenMs,
+      promptTokens: usage?.prompt_tokens ?? null, completionTokens,
+      tokensPerSecond: completionTokens === null || generationSeconds <= 0 ? null : completionTokens / generationSeconds,
+      reasoning: thinking ? 'medium' : 'low',
+    })
+    publishStatus({ phase: 'ready', progress: 1, text: 'Cerebras listo' })
     return answer
   } catch (error) {
-    if (signal.aborted || (error instanceof ProviderError && error.code === 'ABORTED')) throw new ProviderError('ABORTED', 'Request cancelled.')
-    publishStatus({ phase: 'error', progress: 0, text: 'Qwen no ha podido completar la respuesta' })
+    if (signal.aborted) throw new ProviderError('ABORTED', 'Request cancelled.')
+    publishStatus({ phase: 'error', progress: 0, text: 'Cerebras no ha podido responder' })
     if (error instanceof ProviderError) throw error
-    throw new ProviderError('UNAVAILABLE', error instanceof Error ? error.message : 'WebLLM failed.')
-  } finally {
-    signal.removeEventListener('abort', abort)
+    throw new ProviderError('UNAVAILABLE', error instanceof Error ? error.message : 'Cerebras failed.')
   }
 }
 
@@ -209,18 +155,16 @@ export async function synthesizeSpeech(text: string, locale: string, signal: Abo
   if (typeof src !== 'string') throw new ProviderError('INVALID_RESPONSE', 'The voice provider did not return an audio file.')
   let url: URL
   try { url = new URL(src) } catch { throw new ProviderError('INVALID_RESPONSE', 'The voice provider returned an invalid audio URL.') }
-  if (url.protocol !== 'https:' || url.hostname !== new URL(provider.endpoint).hostname || !url.pathname.startsWith('/gradio_api/file=')) {
-    throw new ProviderError('INVALID_RESPONSE', 'The voice provider returned an unexpected audio URL.')
-  }
+  if (url.protocol !== 'https:' || url.hostname !== new URL(provider.endpoint).hostname || !url.pathname.startsWith('/gradio_api/file=')) throw new ProviderError('INVALID_RESPONSE', 'The voice provider returned an unexpected audio URL.')
   return url.href
 }
 
 export function providerErrorMessage(error: unknown, locale = 'es'): string {
   const code = error instanceof ProviderError ? error.code : 'UNAVAILABLE'
   const copy = {
-    es: { ABORTED: 'Solicitud cancelada.', TIMEOUT: 'La IA está tardando demasiado. Inténtalo de nuevo.', RATE_LIMIT: 'El servicio de voz ha alcanzado su límite temporal.', UNAVAILABLE: 'No he podido ejecutar la IA en este dispositivo. Comprueba WebGPU, memoria disponible y vuelve a intentarlo.', INVALID_RESPONSE: 'La respuesta no superó la verificación de la carta. Inténtalo de nuevo.', UNSUPPORTED_LANGUAGE: 'La voz natural está disponible en español e inglés. Puedes seguir por escrito en catalán.', UNSUPPORTED_BROWSER: 'Este navegador no ofrece WebGPU. Prueba una versión reciente de Chrome, Edge o Safari.', KNOWLEDGE_UNAVAILABLE: 'No se han podido cargar MENU.json y PL8.md. Recarga la página e inténtalo de nuevo.' },
-    en: { ABORTED: 'Request cancelled.', TIMEOUT: 'The AI took too long. Please try again.', RATE_LIMIT: 'The voice service has reached its temporary limit.', UNAVAILABLE: 'I could not run the AI on this device. Check WebGPU and available memory, then try again.', INVALID_RESPONSE: 'The reply did not pass menu verification. Please try again.', UNSUPPORTED_LANGUAGE: 'Natural voice is available in Spanish and English. You can keep chatting in Catalan.', UNSUPPORTED_BROWSER: 'This browser does not offer WebGPU. Try a recent Chrome, Edge or Safari version.', KNOWLEDGE_UNAVAILABLE: 'MENU.json and PL8.md could not be loaded. Reload the page and try again.' },
-    ca: { ABORTED: 'Sol·licitud cancel·lada.', TIMEOUT: 'La IA ha trigat massa. Torna-ho a provar.', RATE_LIMIT: 'El servei de veu ha arribat al seu límit temporal.', UNAVAILABLE: 'No he pogut executar la IA en aquest dispositiu. Comprova WebGPU i la memòria disponible.', INVALID_RESPONSE: 'La resposta no ha superat la verificació de la carta. Torna-ho a provar.', UNSUPPORTED_LANGUAGE: 'La veu natural està disponible en castellà i anglès. Pots continuar per escrit en català.', UNSUPPORTED_BROWSER: 'Aquest navegador no ofereix WebGPU. Prova una versió recent de Chrome, Edge o Safari.', KNOWLEDGE_UNAVAILABLE: 'No s’han pogut carregar MENU.json i PL8.md. Recarrega la pàgina.' },
+    es: { ABORTED: 'Solicitud cancelada.', TIMEOUT: 'La IA está tardando demasiado. Inténtalo de nuevo.', RATE_LIMIT: 'Cerebras ha alcanzado temporalmente su cuota. Vuelve a intentarlo dentro de un momento.', AUTH: 'La clave de Cerebras no es válida. Revísala en Configurar API.', UNAVAILABLE: 'Cerebras no está disponible ahora mismo. Inténtalo de nuevo.', INVALID_RESPONSE: 'La respuesta no superó la verificación de la carta. Inténtalo de nuevo.', UNSUPPORTED_LANGUAGE: 'La voz natural está disponible en español e inglés. Puedes seguir por escrito en catalán.', UNSUPPORTED_BROWSER: 'Este navegador no ofrece esta función.', KNOWLEDGE_UNAVAILABLE: 'No se han podido cargar MENU.json y PL8.md. Recarga la página.' },
+    en: { ABORTED: 'Request cancelled.', TIMEOUT: 'The AI took too long. Please try again.', RATE_LIMIT: 'Cerebras has temporarily reached its quota. Please try again shortly.', AUTH: 'The Cerebras key is invalid. Check it in API settings.', UNAVAILABLE: 'Cerebras is currently unavailable. Please try again.', INVALID_RESPONSE: 'The reply did not pass menu verification. Please try again.', UNSUPPORTED_LANGUAGE: 'Natural voice is available in Spanish and English. You can keep chatting in Catalan.', UNSUPPORTED_BROWSER: 'This browser does not offer this feature.', KNOWLEDGE_UNAVAILABLE: 'MENU.json and PL8.md could not be loaded. Reload the page.' },
+    ca: { ABORTED: 'Sol·licitud cancel·lada.', TIMEOUT: 'La IA ha trigat massa. Torna-ho a provar.', RATE_LIMIT: 'Cerebras ha arribat temporalment a la quota. Torna-ho a provar aviat.', AUTH: 'La clau de Cerebras no és vàlida. Revisa-la a la configuració de l’API.', UNAVAILABLE: 'Cerebras no està disponible ara mateix. Torna-ho a provar.', INVALID_RESPONSE: 'La resposta no ha superat la verificació de la carta. Torna-ho a provar.', UNSUPPORTED_LANGUAGE: 'La veu natural està disponible en castellà i anglès. Pots continuar per escrit en català.', UNSUPPORTED_BROWSER: 'Aquest navegador no ofereix aquesta funció.', KNOWLEDGE_UNAVAILABLE: 'No s’han pogut carregar MENU.json i PL8.md. Recarrega la pàgina.' },
   } as const
   return copy[restaurantLocale(locale)][code]
 }

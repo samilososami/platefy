@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Chatbot from '../src/Chatbot';
 import { generateReply } from '../src/services/ai';
 vi.mock('../src/services/ai', async importOriginal => ({ ...await importOriginal<object>(), generateReply: vi.fn() }));
@@ -63,5 +63,17 @@ describe('microphone lifecycle', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     expect((screen.getByRole('button', { name: 'Enviar mensaje' }) as HTMLButtonElement).disabled).toBe(true);
     expect(generateReply).not.toHaveBeenCalled();
+  });
+});
+
+describe('Cerebras reasoning mode', () => {
+  it('sends medium reasoning when the user enables Razonar más', async () => {
+    vi.mocked(generateReply).mockResolvedValueOnce('Respuesta verificada');
+    fireEvent.click(screen.getByRole('button', { name: 'Razonar más' }));
+    const input = screen.getByRole('textbox', { name: 'Tu mensaje' });
+    fireEvent.change(input, { target: { value: '¿Qué postre vegano tenéis?' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar mensaje' }));
+    await waitFor(() => expect(generateReply).toHaveBeenCalledOnce());
+    expect(vi.mocked(generateReply).mock.calls[0][4]).toBe(true);
   });
 });

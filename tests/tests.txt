@@ -1,28 +1,23 @@
 # Platefy manual browser checklist
 
-## Local knowledge
+## Knowledge and Cerebras
 
-1. Open `/chatbot/` and confirm the welcome screen renders.
-2. Enter the chat and confirm the status says `34 referencias de carta listas`.
-3. Open `Carta del restaurante` and confirm the 34 items from `/menu/MENU.json` appear.
-
-## WebLLM
-
-1. Confirm `navigator.gpu.requestAdapter()` returns an adapter.
+1. Open `/chatbot/`, enter the chat and confirm the status reports 34 verified menu items.
 2. Ask: `Quiero algo sin gluten, sin frutos secos, que tenga carne y cueste menos de 14 €`.
-3. Observe the one-time model download progress and then the streamed answer.
-4. Expected candidates are Pollo de corral al limón and Smash Bacon only. The answer must include the allergy/cross-contamination confirmation.
-5. Open Details and record response time, first token, tokens/s, estimated VRAM and JS heap delta when available.
-6. Reload and ask a second question. The browser should reuse the model cache.
+3. Only Pollo de corral al limón and Smash Bacon may be recommended; the reply must ask the user to confirm traces and cross-contamination.
+4. Toggle “Razonar más” and confirm both modes answer: off sends `low`, on sends `medium`.
+5. Open Details and record response time, provider first token, tokens/s and input/output tokens.
+6. Open `/api/`; server configuration must be reported without exposing the key.
 
-## Capability and failure state
+## Safety and failure state
 
-1. The Thinking control is disabled because Qwen2.5 does not expose native thinking mode.
-2. In a browser without a WebGPU adapter, the input must recover and show a clear compatibility message.
-3. Cancelling model loading or generation must restore an editable composer without adding a stale answer.
+1. Ask for a booking confirmation; PL8 must explain it cannot check availability or confirm it.
+2. Ask the assistant to ignore PL8 and invent an unavailable dish; it must refuse to present it as real.
+3. A 401 must point to API settings, a 429 must be recoverable, and stopping generation must restore the composer.
+4. A browser without WebGPU must work because inference runs on Cerebras.
 
 ## Responsive and voice
 
-1. Check 390×844 and a desktop viewport for overflow, clipped controls and usable dialogs.
+1. Check `/`, `/chatbot/` and `/api/` at 390×844 and desktop widths for overflow, clipped controls and usable dialogs.
 2. Microphone denial must leave typed chat available.
 3. Sound stays opt-in. Only enabling it may send assistant text to Kokoro.

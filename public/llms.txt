@@ -10,4 +10,4 @@ Rutas principales:
 - https://platefy.samilososami.com/menu/MENU.json — carta ficticia estructurada usada por la demostración.
 - https://platefy.samilososami.com/menu/PL8.md — identidad y reglas de comportamiento de PL8.
 
-La demostración usa Qwen2.5 1.5B mediante WebLLM dentro del navegador. No confirma reservas reales y la información definitiva de alérgenos debe proceder de cada restaurante.
+La demostración usa GPT-OSS 120B mediante Cerebras. El servidor filtra MENU.json antes de enviar los candidatos necesarios al modelo y valida la respuesta antes de mostrarla. No confirma reservas reales y la información definitiva de alérgenos debe proceder de cada restaurante.
