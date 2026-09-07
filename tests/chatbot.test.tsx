@@ -66,7 +66,7 @@ describe('microphone lifecycle', () => {
   });
 });
 
-describe('Cerebras reasoning mode', () => {
+describe('Qwen reasoning mode', () => {
   it('sends medium reasoning when the user enables Razonar más', async () => {
     vi.mocked(generateReply).mockResolvedValueOnce('Respuesta verificada');
     fireEvent.click(screen.getByRole('button', { name: 'Razonar más' }));

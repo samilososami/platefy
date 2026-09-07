@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#f5f1e8">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="Configuración privada de la conexión de Platefy con Cerebras.">
+  <meta name="description" content="Estado privado de la conexión de Platefy con Cloudflare Workers AI.">
   <link rel="canonical" href="https://platefy.samilososami.com/api/">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-  <title>Conexión Cerebras — Platefy</title>
+  <title>Conexión Cloudflare — Platefy</title>
 </head>
 <body>
   <main class="api-page">
@@ -20,8 +20,8 @@
     <section class="api-layout" aria-labelledby="api-title">
       <div class="api-intro">
         <span class="api-kicker">Conexión del modelo</span>
-        <h1 id="api-title">Cerebras,<br><em>lista para servir.</em></h1>
-        <p>Platefy usa GPT‑OSS 120B para redactar respuestas a partir de MENU.json y PL8.md. La clave configurada en Vercel se usa automáticamente.</p>
+        <h1 id="api-title">Cloudflare,<br><em>lista para servir.</em></h1>
+        <p>Platefy usa Qwen3 30B-A3B para redactar respuestas a partir de MENU.json y PL8.md. La conexión privada del servidor se utiliza automáticamente.</p>
         <div class="api-status" role="status" aria-live="polite">
           <span class="api-status-dot" aria-hidden="true"></span>
           <span id="server-status">Comprobando la conexión del servidor…</span>
@@ -31,24 +31,12 @@
       <div class="api-card">
         <div class="api-card-head">
           <div class="api-orb" aria-hidden="true"><i></i><i></i></div>
-          <div><span>Clave alternativa</span><strong>Solo para este navegador</strong></div>
+          <div><span>Workers AI</span><strong>Conexión privada del servidor</strong></div>
         </div>
-        <p class="api-card-copy">Puedes usar tu propia clave sin cambiar Vercel. Se enviará únicamente a la función de Platefy para hablar con Cerebras.</p>
-        <form id="api-form" novalidate>
-          <label for="api-key">API key de Cerebras</label>
-          <div class="api-input-wrap">
-            <input id="api-key" name="api-key" type="password" inputmode="text" autocomplete="off" spellcheck="false" placeholder="csk-••••••••••••••••••••" aria-describedby="api-help">
-            <button id="show-key" type="button" aria-label="Mostrar clave">Ver</button>
-          </div>
-          <p id="api-help">Por defecto se conserva hasta cerrar esta pestaña.</p>
-          <label class="api-check"><input id="remember-key" type="checkbox"><span aria-hidden="true"></span>Recordar en este dispositivo</label>
-          <div class="api-actions">
-            <button class="api-primary" type="submit">Guardar y probar</button>
-            <button class="api-secondary" id="clear-key" type="button">Eliminar clave local</button>
-          </div>
-          <p class="api-result" id="api-result" aria-live="polite"></p>
-        </form>
-        <p class="api-security">Una web no puede guardar secretos de forma inaccesible para el propio navegador. “Recordar” usa el almacenamiento local de este dispositivo; úsalo solo en uno de confianza.</p>
+        <p class="api-card-copy">Las credenciales no se entregan al navegador. Vercel valida la pregunta y se comunica con un Worker privado que tiene acceso al modelo.</p>
+        <div class="api-actions"><button class="api-primary" id="test-connection" type="button">Probar conexión</button></div>
+        <p class="api-result" id="api-result" aria-live="polite"></p>
+        <p class="api-security">El modelo recibe únicamente los últimos mensajes y los fragmentos de la carta seleccionados por el servidor.</p>
       </div>
     </section>
   </main>
