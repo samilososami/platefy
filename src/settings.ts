@@ -43,7 +43,7 @@ async function checkServer() {
     const status = await response.json() as { configured?: boolean; model?: string }
     if (!response.ok) throw new Error()
     serverStatus.textContent = status.configured
-      ? `Vercel conectado · ${status.model || 'gpt-oss-120b'}`
+      ? `Clave de Vercel configurada · ${status.model || 'gpt-oss-120b'}`
       : 'Vercel todavía no tiene una clave configurada'
     document.querySelector('.api-status')?.classList.toggle('is-ready', Boolean(status.configured))
   } catch {
@@ -67,14 +67,17 @@ form.addEventListener('submit', async event => {
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       body: JSON.stringify({ messages: [{ role: 'user', content: '¿A qué hora sirve cenas el restaurante?' }], locale: 'es', thinking: false, apiKey: key }),
     })
-    if (!response.ok) throw new Error(String(response.status))
+    if (!response.ok) {
+      const problem = await response.json().catch(() => ({})) as { reason?: string }
+      throw new Error(problem.reason || String(response.status))
+    }
     await response.body?.cancel()
     input.value = ''
     input.placeholder = 'Hay una clave guardada · escribe para sustituirla'
     setResult('Conexión verificada. Cerebras ha respondido correctamente.', 'success')
   } catch (error) {
-    const status = error instanceof Error ? Number(error.message) : 0
-    setResult(status === 401 ? 'Cerebras ha rechazado la clave.' : status === 429 ? 'La cuota está ocupada. Espera un minuto y vuelve a probar.' : 'No se ha podido completar la prueba.', 'error')
+    const reason = error instanceof Error ? error.message : ''
+    setResult(reason === 'authentication' || reason === '401' ? 'Cerebras ha rechazado la clave.' : reason === 'quota_unavailable' ? 'La cuenta no tiene cuota disponible. Activa créditos en Cerebras o prueba otra clave.' : reason === 'rate_limit' || reason === '429' ? 'La cuota está ocupada. Espera un minuto y vuelve a probar.' : 'No se ha podido completar la prueba.', 'error')
   }
 })
 

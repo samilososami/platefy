@@ -73,10 +73,12 @@ type CerebrasChunk = {
   platefy_metrics?: { provider_first_token_ms?: number | null }
 }
 
-function responseError(statusCode: number): ProviderError {
-  if (statusCode === 429 || statusCode === 402) return new ProviderError('RATE_LIMIT', 'Cerebras quota reached.')
-  if (statusCode === 401 || statusCode === 403) return new ProviderError('AUTH', 'Cerebras rejected the API key.')
-  return new ProviderError('UNAVAILABLE', `Cerebras could not complete the request (${statusCode}).`)
+async function responseError(response: Response): Promise<ProviderError> {
+  let reason = ''
+  try { reason = String((await response.clone().json() as { reason?: unknown }).reason || '') } catch { /* Non-JSON provider error. */ }
+  if (response.status === 429 || response.status === 402) return new ProviderError(reason === 'quota_unavailable' ? 'QUOTA' : 'RATE_LIMIT', 'Cerebras quota reached.')
+  if (response.status === 401 || response.status === 403) return new ProviderError('AUTH', 'Cerebras rejected the API key.')
+  return new ProviderError('UNAVAILABLE', `Cerebras could not complete the request (${response.status}).`)
 }
 
 export async function generateReply(messages: ChatMessage[], locale: string, signal: AbortSignal, onProgress?: (text: string) => void, thinking = false): Promise<string> {
@@ -99,7 +101,7 @@ export async function generateReply(messages: ChatMessage[], locale: string, sig
       credentials: 'same-origin', cache: 'no-store', signal,
       body: JSON.stringify({ messages: recent, locale: restaurantLocale(locale), thinking, apiKey: browserKey || undefined }),
     })
-    if (!response.ok) throw responseError(response.status)
+    if (!response.ok) throw await responseError(response)
     if (!response.body) throw new ProviderError('INVALID_RESPONSE', 'Cerebras returned an empty stream.')
 
     publishStatus({ phase: 'generating', progress: 1, text: thinking ? 'Razonando sobre la carta' : 'Preparando tu recomendación' })
@@ -162,9 +164,9 @@ export async function synthesizeSpeech(text: string, locale: string, signal: Abo
 export function providerErrorMessage(error: unknown, locale = 'es'): string {
   const code = error instanceof ProviderError ? error.code : 'UNAVAILABLE'
   const copy = {
-    es: { ABORTED: 'Solicitud cancelada.', TIMEOUT: 'La IA está tardando demasiado. Inténtalo de nuevo.', RATE_LIMIT: 'Cerebras ha alcanzado temporalmente su cuota. Vuelve a intentarlo dentro de un momento.', AUTH: 'La clave de Cerebras no es válida. Revísala en Configurar API.', UNAVAILABLE: 'Cerebras no está disponible ahora mismo. Inténtalo de nuevo.', INVALID_RESPONSE: 'La respuesta no superó la verificación de la carta. Inténtalo de nuevo.', UNSUPPORTED_LANGUAGE: 'La voz natural está disponible en español e inglés. Puedes seguir por escrito en catalán.', UNSUPPORTED_BROWSER: 'Este navegador no ofrece esta función.', KNOWLEDGE_UNAVAILABLE: 'No se han podido cargar MENU.json y PL8.md. Recarga la página.' },
-    en: { ABORTED: 'Request cancelled.', TIMEOUT: 'The AI took too long. Please try again.', RATE_LIMIT: 'Cerebras has temporarily reached its quota. Please try again shortly.', AUTH: 'The Cerebras key is invalid. Check it in API settings.', UNAVAILABLE: 'Cerebras is currently unavailable. Please try again.', INVALID_RESPONSE: 'The reply did not pass menu verification. Please try again.', UNSUPPORTED_LANGUAGE: 'Natural voice is available in Spanish and English. You can keep chatting in Catalan.', UNSUPPORTED_BROWSER: 'This browser does not offer this feature.', KNOWLEDGE_UNAVAILABLE: 'MENU.json and PL8.md could not be loaded. Reload the page.' },
-    ca: { ABORTED: 'Sol·licitud cancel·lada.', TIMEOUT: 'La IA ha trigat massa. Torna-ho a provar.', RATE_LIMIT: 'Cerebras ha arribat temporalment a la quota. Torna-ho a provar aviat.', AUTH: 'La clau de Cerebras no és vàlida. Revisa-la a la configuració de l’API.', UNAVAILABLE: 'Cerebras no està disponible ara mateix. Torna-ho a provar.', INVALID_RESPONSE: 'La resposta no ha superat la verificació de la carta. Torna-ho a provar.', UNSUPPORTED_LANGUAGE: 'La veu natural està disponible en castellà i anglès. Pots continuar per escrit en català.', UNSUPPORTED_BROWSER: 'Aquest navegador no ofereix aquesta funció.', KNOWLEDGE_UNAVAILABLE: 'No s’han pogut carregar MENU.json i PL8.md. Recarrega la pàgina.' },
+    es: { ABORTED: 'Solicitud cancelada.', TIMEOUT: 'La IA está tardando demasiado. Inténtalo de nuevo.', RATE_LIMIT: 'Cerebras está limitando las peticiones. Espera un minuto y vuelve a intentarlo.', QUOTA: 'La cuenta de Cerebras no tiene cuota disponible. Activa créditos o configura otra clave en Configurar API.', AUTH: 'La clave de Cerebras no es válida. Revísala en Configurar API.', UNAVAILABLE: 'Cerebras no está disponible ahora mismo. Inténtalo de nuevo.', INVALID_RESPONSE: 'La respuesta no superó la verificación de la carta. Inténtalo de nuevo.', UNSUPPORTED_LANGUAGE: 'La voz natural está disponible en español e inglés. Puedes seguir por escrito en catalán.', UNSUPPORTED_BROWSER: 'Este navegador no ofrece esta función.', KNOWLEDGE_UNAVAILABLE: 'No se han podido cargar MENU.json y PL8.md. Recarga la página.' },
+    en: { ABORTED: 'Request cancelled.', TIMEOUT: 'The AI took too long. Please try again.', RATE_LIMIT: 'Cerebras is rate limiting requests. Wait a minute and try again.', QUOTA: 'The Cerebras account has no available quota. Activate credits or set another key in API settings.', AUTH: 'The Cerebras key is invalid. Check it in API settings.', UNAVAILABLE: 'Cerebras is currently unavailable. Please try again.', INVALID_RESPONSE: 'The reply did not pass menu verification. Please try again.', UNSUPPORTED_LANGUAGE: 'Natural voice is available in Spanish and English. You can keep chatting in Catalan.', UNSUPPORTED_BROWSER: 'This browser does not offer this feature.', KNOWLEDGE_UNAVAILABLE: 'MENU.json and PL8.md could not be loaded. Reload the page.' },
+    ca: { ABORTED: 'Sol·licitud cancel·lada.', TIMEOUT: 'La IA ha trigat massa. Torna-ho a provar.', RATE_LIMIT: 'Cerebras està limitant les peticions. Espera un minut i torna-ho a provar.', QUOTA: 'El compte de Cerebras no té quota disponible. Activa crèdits o configura una altra clau.', AUTH: 'La clau de Cerebras no és vàlida. Revisa-la a la configuració de l’API.', UNAVAILABLE: 'Cerebras no està disponible ara mateix. Torna-ho a provar.', INVALID_RESPONSE: 'La resposta no ha superat la verificació de la carta. Torna-ho a provar.', UNSUPPORTED_LANGUAGE: 'La veu natural està disponible en castellà i anglès. Pots continuar per escrit en català.', UNSUPPORTED_BROWSER: 'Aquest navegador no ofereix aquesta funció.', KNOWLEDGE_UNAVAILABLE: 'No s’han pogut carregar MENU.json i PL8.md. Recarrega la pàgina.' },
   } as const
   return copy[restaurantLocale(locale)][code]
 }

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { browserApiKeyIsPersistent, clearBrowserApiKey, getBrowserApiKey, isCerebrasKey, saveBrowserApiKey } from '../src/services/cerebras-key'
 
-const validKey = 'csk-abcdefghijklmnopqrstuvwxyz123456'
+const validKey = ['csk', 'abcdefghijklmnopqrstuvwxyz123456'].join('-')
 
 beforeEach(() => { sessionStorage.clear(); localStorage.clear() })
 

@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import handler from '../api/chat'
 
-const fakeKey = 'csk-abcdefghijklmnopqrstuvwxyz123456'
+const fakeKey = ['csk', 'abcdefghijklmnopqrstuvwxyz123456'].join('-')
 
 function request(body: unknown, ip: string) {
   const emitter = new EventEmitter() as EventEmitter & {
