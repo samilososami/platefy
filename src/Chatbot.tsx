@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, AudioLines, BookOpen, Check, Clock3, Info, Leaf, Menu, Mic, Plus, RotateCcw, Square, Store, Users, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, AudioLines, BookOpen, Check, Clock3, Info, Leaf, Menu, Mic, Plus, RotateCcw, Sparkles, Square, Store, Users, Volume2, VolumeX, X } from 'lucide-react';
 import type { Locale } from './content';
 import { Brand, LanguageSelect, Orb, type OrbState } from './ui';
 import { generateReply, prepareKnowledge, providerErrorMessage, synthesizeSpeech, ProviderError, type ChatMessage, type DishImage } from './services/ai';
-import { getRestaurantSlug, type MenuDish } from './services/restaurant';
+import { getRestaurantSlug, restaurantName as getRestaurantName, type MenuDish } from './services/restaurant';
 import { ChatbotScenery, ChatbotGarden, chatbotArtwork } from './ChatbotArtwork';
 import './chatbot.css';
 import './chatbot-themes.css';
+import './embedded-chat.css';
+import { demoCopy } from './demo-copy';
 
 const copy = {
   es: {
@@ -161,7 +163,7 @@ function useConversation(locale: Locale) {
 function Sidebar({ c, onPanel, onReset, home }: { c: Copy; onPanel: (panel: Panel) => void; onReset: () => void; home: string }) {
   const restaurant = getRestaurantSlug();
   return <>
-    <div className="chat-rail-brand"><a className="chat-restaurant-signature" href={home}>{restaurant === 'ko' ? 'Kō' : 'vita'}</a><Brand href={home} /></div>
+    <div className="chat-rail-brand"><a className="chat-restaurant-signature" href={home}>{restaurant === 'vita' ? 'vita' : getRestaurantName(restaurant)}</a><Brand href={home} /></div>
     <button className="chat-new" onClick={onReset}><Plus size={20} aria-hidden="true" />{c.newChat}</button>
     <div className="chat-nav-group"><p>{c.about}</p><nav aria-label={c.about}>
       <button onClick={() => onPanel('menu')}><BookOpen size={20} aria-hidden="true" />{c.menu}</button>
@@ -172,18 +174,18 @@ function Sidebar({ c, onPanel, onReset, home }: { c: Copy; onPanel: (panel: Pane
   </>;
 }
 
-function InformationPanel({ panel, onClose, onPanel, onReset, locale, home, menu }: { panel: Exclude<Panel, null>; onClose: () => void; onPanel: (panel: Panel) => void; onReset: () => void; locale: Locale; home: string; menu: MenuDish[] }) {
+function InformationPanel({ panel, onClose, onPanel, onReset, locale, home, menu, embedded = false }: { embedded?: boolean; panel: Exclude<Panel, null>; onClose: () => void; onPanel: (panel: Panel) => void; onReset: () => void; locale: Locale; home: string; menu: MenuDish[] }) {
   const ref = useRef<HTMLDialogElement>(null);
   const c = copy[locale];
   useEffect(() => { const dialog = ref.current; dialog?.showModal(); return () => { if (dialog?.open) dialog.close(); }; }, []);
-  const title = panel === 'menu' ? c.menu : panel === 'hours' ? c.hours : panel === 'navigation' ? `${getRestaurantSlug() === 'ko' ? 'Kō' : 'Vita'} · platefy` : c.detailsTitle;
+  const title = panel === 'menu' ? c.menu : panel === 'hours' ? c.hours : panel === 'navigation' ? `${getRestaurantName(getRestaurantSlug())} · platefy` : c.detailsTitle;
   return <dialog ref={ref} className={`chat-dialog chat-dialog--${panel}`} aria-labelledby="chat-panel-title" onCancel={onClose} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
     <div className="chat-dialog-inner">
       <header className="chat-dialog-header"><h2 id="chat-panel-title">{title}</h2><button className="icon-button" onClick={onClose} aria-label={c.close}><X size={20} /></button></header>
       {panel === 'navigation' ? <div className="chat-mobile-nav"><Sidebar c={c} onPanel={onPanel} onReset={onReset} home={home} /></div> : null}
       {panel === 'menu' ? <><p className="chat-dialog-intro">{c.menuIntro}</p><div className="chat-menu-list">{menu.map(dish => <article className="chat-menu-dish" key={dish.id}><div className="chat-dish-heading"><h3>{dish.nombre}</h3><span>{new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }).format(dish.precio)}</span></div><p>{dish.descripcion}</p><div className="chat-dish-tags">{dish.dietas.includes('vegano') || dish.dietas.includes('vegetariano') ? <span><Leaf size={13} aria-hidden="true" />{dish.dietas.includes('vegano') ? c.vegan : c.vegetarian}</span> : null}{dish.alergenos.length > 0 ? <span>{c.milk}: {dish.alergenos.join(', ')}</span> : null}</div></article>)}</div><p className="chat-panel-note"><Info size={17} aria-hidden="true" />{c.allergy}</p></> : null}
       {panel === 'hours' ? <><p className="chat-dialog-intro">{c.hoursIntro}</p><section className="chat-info-section"><h3>{c.location}</h3><p>{c.locationBody}</p></section><section className="chat-info-section"><h3>{c.reservations}</h3><p>{c.reservationsBody}</p></section></> : null}
-      {panel === 'details' ? <><p className="chat-dialog-intro">{c.detailsBody}</p><a className="button button-dark" href={home}>{c.menu}<ArrowUpRight size={16} /></a><p className="chat-panel-note"><Info size={17} aria-hidden="true" />{c.privacy}</p></> : null}
+      {panel === 'details' ? <><p className="chat-dialog-intro">{c.detailsBody}</p>{embedded ? <button className="button button-dark" onClick={() => onPanel('menu')}>{c.menu}<BookOpen size={16} /></button> : <a className="button button-dark" href={home}>{c.menu}<ArrowUpRight size={16} /></a>}<p className="chat-panel-note"><Info size={17} aria-hidden="true" />{c.privacy}</p></> : null}
     </div>
   </dialog>;
 }
@@ -192,10 +194,10 @@ function MessageText({ text }: { text: string }) {
   return <div className="chat-message-text">{text.split(/\n{2,}/).map((paragraph, i) => <p key={i}>{paragraph.split(/(\*\*[^*]+\*\*)/g).map((part, j) => part.startsWith('**') && part.endsWith('**') ? <strong key={j}>{part.slice(2, -2)}</strong> : part)}</p>)}</div>;
 }
 
-export default function Chatbot({ locale, onLocaleChange }: { locale: Locale; onLocaleChange: (locale: Locale) => void }) {
+export default function Chatbot({ locale, onLocaleChange, embedded = false }: { locale: Locale; onLocaleChange: (locale: Locale) => void; embedded?: boolean }) {
   const c = copy[locale];
   const conversation = useConversation(locale);
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(embedded);
   const [panel, setPanel] = useState<Panel>(null);
   const [draft, setDraft] = useState('');
   const [listening, setListening] = useState(false);
@@ -209,14 +211,15 @@ export default function Chatbot({ locale, onLocaleChange }: { locale: Locale; on
   const recognitionEpoch = useRef(0);
   const draftBeforeListening = useRef('');
   const restaurant = getRestaurantSlug();
-  const restaurantName = restaurant === 'vita' ? 'Vita' : 'Kō';
-  const home = `/restaurantes/${restaurant}/`;
+  const restaurantName = getRestaurantName(restaurant);
+  const demo = demoCopy[locale];
+  const home = restaurant === 'pica-pica' ? '/#producto' : `/restaurantes/${restaurant}/`;
   const restaurantIntro = locale === 'en' ? `Discover the menu at ${restaurantName}.` : locale === 'ca' ? `Descobreix la carta de ${restaurantName}.` : `Descubre la carta de ${restaurantName}.`;
 
   useEffect(() => { const timer = window.setTimeout(() => setAppearing(false), 1250); return () => window.clearTimeout(timer); }, []);
   useEffect(() => {
     let active = true;
-    void prepareKnowledge().then(knowledge => { if (active) { setMenu(knowledge.menu.platos); const dishId = new URLSearchParams(location.search).get('dish'); const dish = knowledge.menu.platos.find(item => item.id === dishId); if (dish) { setDraft(locale === 'en' ? `Tell me about ${dish.nombre}` : locale === 'ca' ? `Explica’m ${dish.nombre}` : `Cuéntame sobre ${dish.nombre}`); setStarted(true); } } }).catch(() => undefined);
+    void prepareKnowledge().then(knowledge => { if (active) { setMenu(knowledge.menu.platos); const dishId = new URLSearchParams(location.search).get('dish'); const dish = knowledge.menu.platos.find(item => item.id === dishId); if (dish) { setDraft(locale === 'en' ? `Tell me about ${dish.nombre}` : locale === 'ca' ? `Explica’m ${dish.nombre}` : `Cuéntame sobre ${dish.nombre}`); setStarted(true); } } }).catch(() => { if (active && embedded) window.parent.postMessage({ type: 'platefy:error', restaurant }, location.origin); });
     return () => { active = false; };
   }, []);
   useEffect(() => {
@@ -292,29 +295,38 @@ export default function Chatbot({ locale, onLocaleChange }: { locale: Locale; on
   const openPanel = (next: Panel) => { abortRecognition(); conversation.stopAudio(); setPanel(next); };
   const changeLocale = (next: Locale) => { abortRecognition(); if (next === 'ca' && conversation.sound) conversation.toggleSound(); conversation.changeLanguage(); onLocaleChange(next); };
   const state: OrbState = appearing && !started ? 'appearing' : listening ? 'listening' : conversation.generating || conversation.audioState === 'loading' ? 'thinking' : conversation.audioState === 'playing' ? 'speaking' : conversation.notice ? 'error' : 'idle';
+  useEffect(() => {
+    if (!embedded) return;
+    const pause = () => { conversation.stopGeneration(); conversation.stopAudio(); recognitionEpoch.current += 1; releaseRecognition(recognitionRef.current); recognitionRef.current = null; };
+    const onMessage = (event: MessageEvent) => { if (event.origin === location.origin && event.source === window.parent && event.data?.type === 'platefy:pause') pause(); };
+    if (menu.length) window.parent.postMessage({ type: 'platefy:ready', restaurant }, location.origin);
+    window.addEventListener('message', onMessage);
+    window.addEventListener('pagehide', pause);
+    return () => { window.removeEventListener('message', onMessage); window.removeEventListener('pagehide', pause); };
+  }, [embedded, restaurant, menu.length, conversation.stopAudio, conversation.stopGeneration]);
   const hasMessages = conversation.messages.length > 0;
   const welcomeMessage: DisplayMessage = { id: `welcome-${locale}`, role: 'assistant', content: `${c.welcome} ${c.welcomeNote}` };
   const welcomeAudioActive = conversation.activeAudio === welcomeMessage.id;
 
-  return <div ref={appRef} className={`chat-app chat-theme--${restaurant} ${started ? 'chat-app--started' : 'chat-app--welcome'} ${hasMessages ? 'chat-app--conversation' : ''}`}>
-    <aside className="chat-rail"><Sidebar c={c} onPanel={openPanel} onReset={reset} home={home} /></aside>
+  return <div ref={appRef} className={`chat-app chat-theme--${restaurant} ${started ? 'chat-app--started' : 'chat-app--welcome'} ${hasMessages ? 'chat-app--conversation' : ''} ${embedded ? 'chat-app--embedded' : ''}`}>
+    {!embedded ? <aside className="chat-rail"><Sidebar c={c} onPanel={openPanel} onReset={reset} home={home} /></aside> : null}
     <main className="chat-main" aria-label={c.table}>
       <ChatbotScenery restaurant={restaurant} />
-      <header className="chat-header"><div className="chat-header-title"><button className="icon-button chat-menu-toggle" onClick={() => openPanel('navigation')} aria-label={c.openNavigation}><Menu size={21} /></button><div><h1>{restaurantName} <span className="chat-by">· platefy</span></h1><p>{restaurantIntro}</p></div></div><div className="chat-header-actions"><button className="chat-sound" onClick={conversation.toggleSound} aria-label={conversation.sound ? c.soundOff : c.soundOn} aria-pressed={conversation.sound} title={c.voiceHint}>{conversation.sound ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>{c.sound}</span><i aria-hidden="true" className={conversation.sound ? 'is-on' : ''} /></button><LanguageSelect locale={locale} onChange={changeLocale} /></div></header>
+      <header className="chat-header"><div className="chat-header-title">{!embedded ? <button className="icon-button chat-menu-toggle" onClick={() => openPanel('navigation')} aria-label={c.openNavigation}><Menu size={21} /></button> : null}<div><h1>{restaurantName} <span className="chat-by">· platefy</span></h1>{!embedded ? <p>{restaurantIntro}</p> : null}</div></div><div className="chat-header-actions">{embedded ? <><button className="embedded-tool" onClick={() => openPanel('menu')} aria-label={c.menu}><BookOpen size={19} /><span>{demo.menu}</span></button><button className="embedded-tool" onClick={reset} aria-label={c.newChat}><Plus size={20} /><span>{demo.newChat}</span></button></> : null}<button className="chat-sound" onClick={conversation.toggleSound} aria-label={conversation.sound ? c.soundOff : c.soundOn} aria-pressed={conversation.sound} title={c.voiceHint}>{conversation.sound ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>{c.sound}</span><i aria-hidden="true" className={conversation.sound ? 'is-on' : ''} /></button><LanguageSelect locale={locale} onChange={changeLocale} /></div></header>
       {!started ? <section className="chat-welcome"><Orb state={state} imageSrc={chatbotArtwork(restaurant, 'orb')} className="chat-welcome-orb" /><div className="chat-welcome-copy"><h2>{c.welcome}</h2><p>{c.welcomeBody}</p><span>{restaurantIntro}</span></div><button className="button button-dark chat-start" onClick={() => { conversation.stopAudio(); setStarted(true); }}>{c.start}<ArrowRight size={18} aria-hidden="true" /></button><button type="button" className={`chat-voice-preview ${welcomeAudioActive ? 'chat-voice-preview--active' : ''}`} onClick={() => welcomeAudioActive ? conversation.stopAudio() : void conversation.playMessage(welcomeMessage)} aria-label={welcomeAudioActive ? c.stopAudio : c.voicePreview}>{welcomeAudioActive ? <Square size={12} fill="currentColor" aria-hidden="true" /> : <Volume2 size={15} aria-hidden="true" />}<span>{welcomeAudioActive ? conversation.audioState === 'loading' ? c.loadingAudio : c.stopAudio : c.voicePreview}</span></button><a className="chat-welcome-note" href={home}>{c.menu} · {restaurantName}</a>{conversation.notice ? <p className="chat-welcome-notice" role="alert">{conversation.notice}</p> : null}</section> : <>
         <div className={`chat-scroll ${hasMessages ? 'chat-scroll--conversation' : ''}`} ref={scrollRef}>
-          {!hasMessages ? <section className="chat-empty"><div className="chat-empty-orb-wrap"><span className="chat-orb-wave" aria-hidden="true"><i /><i /><i /><i /><i /></span><Orb state={state} imageSrc={chatbotArtwork(restaurant, 'orb')} className="chat-empty-orb" /><span className="chat-orb-wave" aria-hidden="true"><i /><i /><i /><i /><i /></span></div><h2>{c.title}</h2><p>{c.subtitle}</p><div className="chat-suggestions">{c.suggestions.map((suggestion, i) => { const Icon = suggestionIcons[i]; return <button key={suggestion} onClick={() => send(c.prompts[i])}><Icon size={23} strokeWidth={1.4} aria-hidden="true" /><span>{suggestion}</span><ArrowUpRight size={16} aria-hidden="true" /></button>; })}</div></section> : <div className="chat-thread"><div className="chat-presence"><Orb state={state} imageSrc={chatbotArtwork(restaurant, 'orb')} className="chat-presence-orb" /><span>{requestingMic ? c.requestingMic : listening ? c.listening : conversation.generating ? c.thinking : conversation.audioState === 'loading' ? c.loadingAudio : conversation.audioState === 'playing' ? c.speaking : c.ready}</span></div><div className="chat-messages" role="log" aria-live="polite" aria-relevant="additions text">{conversation.messages.map(message => <article className={`chat-message chat-message--${message.role}`} key={message.id}><span className="sr-only">{message.role === 'user' ? c.you : 'Platefy'}</span>{message.role === 'assistant' ? <span className="chat-message-brand" aria-hidden="true">platefy</span> : null}<MessageText text={message.content} />{message.images?.length ? <div className="chat-dish-images">{message.images.map(img => <figure key={img.id}><a href={`${home}#${img.id}`}><img src={img.src} alt={img.alt} width="600" height="400" loading="lazy" /></a><figcaption>{img.nombre}<span>{locale === 'en' ? 'Illustrative image' : locale === 'ca' ? 'Imatge il·lustrativa' : 'Imagen ilustrativa'}</span></figcaption></figure>)}</div> : null}{message.role === 'assistant' ? <button className={`chat-read ${conversation.activeAudio === message.id ? 'chat-read--active' : ''}`} onClick={() => { abortRecognition(); if (conversation.activeAudio === message.id) conversation.stopAudio(); else void conversation.playMessage(message); }} aria-label={conversation.activeAudio === message.id ? c.stopAudio : c.read}>{conversation.activeAudio === message.id ? <Square size={13} fill="currentColor" /> : <Volume2 size={15} />}<span>{conversation.activeAudio === message.id ? conversation.audioState === 'loading' ? c.loadingAudio : c.stopAudio : c.read}</span></button> : null}</article>)}{conversation.partialReply ? <article className="chat-message chat-message--assistant chat-message--streaming"><span className="chat-message-brand" aria-hidden="true">platefy</span><MessageText text={conversation.partialReply} /></article> : conversation.generating ? <div className="chat-thinking" role="status"><span className="chat-thinking-dots" aria-hidden="true"><i /><i /><i /></span><span>{c.thinking}</span></div> : null}</div></div>}
+          {!hasMessages ? <section className="chat-empty"><div className="chat-empty-orb-wrap"><span className="chat-orb-wave" aria-hidden="true"><i /><i /><i /><i /><i /></span><Orb state={state} imageSrc={chatbotArtwork(restaurant, 'orb')} className="chat-empty-orb" /><span className="chat-orb-wave" aria-hidden="true"><i /><i /><i /><i /><i /></span></div><h2>{c.title}</h2><p>{embedded ? demo.chatSubtitle : c.subtitle}</p><div className="chat-suggestions">{embedded ? <><button onClick={() => send(demo.prompt)}><Sparkles size={18} /><span>{demo.recommend}</span></button><button onClick={() => openPanel('menu')}><BookOpen size={18} /><span>{demo.menu}</span></button></> : c.suggestions.map((suggestion, i) => { const Icon = suggestionIcons[i]; return <button key={suggestion} onClick={() => send(c.prompts[i])}><Icon size={23} strokeWidth={1.4} aria-hidden="true" /><span>{suggestion}</span><ArrowUpRight size={16} aria-hidden="true" /></button>; })}</div></section> : <div className="chat-thread"><div className="chat-presence"><Orb state={state} imageSrc={chatbotArtwork(restaurant, 'orb')} className="chat-presence-orb" /><span>{requestingMic ? c.requestingMic : listening ? c.listening : conversation.generating ? c.thinking : conversation.audioState === 'loading' ? c.loadingAudio : conversation.audioState === 'playing' ? c.speaking : c.ready}</span></div><div className="chat-messages" role="log" aria-live="polite" aria-relevant="additions text">{conversation.messages.map(message => <article className={`chat-message chat-message--${message.role}`} key={message.id}><span className="sr-only">{message.role === 'user' ? c.you : 'Platefy'}</span>{message.role === 'assistant' ? <span className="chat-message-brand" aria-hidden="true">platefy</span> : null}<MessageText text={message.content} />{message.images?.length ? <div className="chat-dish-images">{message.images.map(img => <figure key={img.id}><a href={`${home}#${img.id}`} onClick={embedded ? event => { event.preventDefault(); openPanel('menu'); } : undefined}><img src={img.src} alt={img.alt} width="600" height="400" loading="lazy" /></a><figcaption>{img.nombre}<span>{locale === 'en' ? 'Illustrative image' : locale === 'ca' ? 'Imatge il·lustrativa' : 'Imagen ilustrativa'}</span></figcaption></figure>)}</div> : null}{message.role === 'assistant' ? <button className={`chat-read ${conversation.activeAudio === message.id ? 'chat-read--active' : ''}`} onClick={() => { abortRecognition(); if (conversation.activeAudio === message.id) conversation.stopAudio(); else void conversation.playMessage(message); }} aria-label={conversation.activeAudio === message.id ? c.stopAudio : c.read}>{conversation.activeAudio === message.id ? <Square size={13} fill="currentColor" /> : <Volume2 size={15} />}<span>{conversation.activeAudio === message.id ? conversation.audioState === 'loading' ? c.loadingAudio : c.stopAudio : c.read}</span></button> : null}</article>)}{conversation.partialReply ? <article className="chat-message chat-message--assistant chat-message--streaming"><span className="chat-message-brand" aria-hidden="true">platefy</span><MessageText text={conversation.partialReply} /></article> : conversation.generating ? <div className="chat-thinking" role="status"><span className="chat-thinking-dots" aria-hidden="true"><i /><i /><i /></span><span>{c.thinking}</span></div> : null}</div></div>}
         </div>
         <div className="chat-bottom">
           {conversation.notice ? <div className="chat-notice" role="alert"><Info size={18} aria-hidden="true" /><div><p>{conversation.notice}</p>{conversation.canRetry ? <button className="chat-retry" onClick={conversation.retry}><RotateCcw size={14} aria-hidden="true" />{c.retry}</button> : null}</div><button className="icon-button" onClick={conversation.dismiss} aria-label={c.dismiss}><X size={16} /></button></div> : null}
           {listening || requestingMic ? <div className="chat-listening-status" role="status"><AudioLines size={18} aria-hidden="true" /><strong>{requestingMic ? c.requestingMic : c.listening}</strong>{listening ? <span>{c.listeningHint}</span> : null}</div> : null}
           <form className={`chat-composer ${listening ? 'chat-composer--listening' : ''}`} onSubmit={submit}>
-            <label className="sr-only" htmlFor="chat-message">{c.input}</label><textarea id="chat-message" ref={composerRef} rows={1} value={draft} onChange={event => setDraft(event.target.value)} placeholder={listening ? c.noTranscript : c.placeholder} maxLength={4000} disabled={conversation.generating} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && !listening && !requestingMic) { event.preventDefault(); send(draft); } }} />
+            <label className="sr-only" htmlFor="chat-message">{c.input}</label><textarea id="chat-message" ref={composerRef} rows={1} value={draft} onChange={event => setDraft(event.target.value)} placeholder={listening ? c.noTranscript : embedded ? demo.placeholder : c.placeholder} maxLength={4000} disabled={conversation.generating} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && !listening && !requestingMic) { event.preventDefault(); send(draft); } }} />
             <div className="chat-composer-actions">{listening || requestingMic ? <><button key="cancel-listening" type="button" className="chat-mic" onClick={() => endListening(true)} aria-label={c.cancel}><X size={19} /></button><button key="accept-transcript" disabled={requestingMic} type="button" className="chat-send" onClick={() => endListening()} aria-label={c.useTranscript}><Check size={21} /></button></> : <><button key="start-listening" type="button" className="chat-mic" disabled={conversation.generating} onClick={beginListening} aria-label={c.listen}><Mic size={21} /></button>{conversation.generating ? <button key="stop-generation" type="button" className="chat-send" onClick={conversation.stopGeneration} aria-label={c.stop}><Square size={17} fill="currentColor" /></button> : <button key="send-message" type="submit" className="chat-send" disabled={!draft.trim()} aria-label={c.send}><ArrowRight size={24} /></button>}</>}</div>
           </form><div className="chat-footnote"><span>{c.disclaimer}</span><button onClick={() => openPanel('details')}>{c.details}<Info size={12} aria-hidden="true" /></button></div>
         </div>
       </>}
-      {panel ? <InformationPanel key={panel} panel={panel} onClose={() => setPanel(null)} onPanel={openPanel} onReset={reset} locale={locale} home={home} menu={menu} /> : null}
+      {panel ? <InformationPanel key={panel} panel={panel} onClose={() => setPanel(null)} onPanel={openPanel} onReset={reset} locale={locale} home={home} menu={menu} embedded={embedded} /> : null}
     </main>
   </div>;
 }

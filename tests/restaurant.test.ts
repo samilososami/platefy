@@ -92,3 +92,37 @@ describe('restaurant knowledge and photographs', () => {
     await expect(loadRestaurantKnowledge(true, 'vita')).rejects.toThrow('KNOWLEDGE_INVALID')
   })
 })
+
+describe('embedded demo tenant isolation', () => {
+  it('accepts only an unambiguous allowlisted restaurant on the exact demo route', () => {
+    expect(getRestaurantSlug('/demo/chat/?restaurant=pica-pica')).toBe('pica-pica')
+    expect(getRestaurantSlug('/demo/chat', '?restaurant=vita')).toBe('vita')
+    expect(getRestaurantSlug('/demo/chat/?restaurant=ko')).toBe('ko')
+    expect(getRestaurantSlug('/demo/chat/?restaurant=../../vita')).toBe('ko')
+    expect(getRestaurantSlug('/demo/chat/?restaurant=vita&restaurant=pica-pica')).toBe('ko')
+    expect(getRestaurantSlug('/other/?restaurant=vita')).toBe('ko')
+    expect(getRestaurantSlug('/restaurantes/vita/platefy?restaurant=pica-pica')).toBe('vita')
+    expect(getRestaurantSlug('/restaurantes/pica-pica/platefy')).toBe('ko')
+  })
+
+  it('loads the Pica Pica demo knowledge independently of both restaurant sites', async () => {
+    const fetchMock = vi.fn(async (input: string) => input === '/platefy.md'
+      ? new Response('Soy platefy.')
+      : new Response(JSON.stringify({ ...menu, restaurante: { ...menu.restaurante, slug: 'pica-pica' } })))
+    vi.stubGlobal('fetch', fetchMock)
+    const knowledge = await loadRestaurantKnowledge(true, 'pica-pica')
+    expect(knowledge.menu.restaurante.slug).toBe('pica-pica')
+    expect(fetchMock.mock.calls.map(call => call[0])).toEqual(['/platefy.md', '/demos/pica-pica/menu.json'])
+    expect(await loadRestaurantKnowledge(false, 'pica-pica')).toBe(knowledge)
+  })
+
+  it('allows only Pica Pica demo photos for its tenant', () => {
+    const dish = { id: 'braves', nombre: 'Patates braves', imagen: '/demos/pica-pica/images/braves.webp' }
+    expect(safeDishImage(dish, 'pica-pica')?.src).toBe(dish.imagen)
+    expect(safeDishImage(dish, 'ko')).toBeNull()
+    expect(safeDishImage(dish, 'vita')).toBeNull()
+    for (const imagen of ['/restaurantes/ko/images/braves.webp', '/restaurantes/pica-pica/images/braves.webp', '/assets/restaurantes/pica-pica/braves.webp', '/demos/pica-pica/../ko/braves.webp']) {
+      expect(safeDishImage({ ...dish, imagen }, 'pica-pica')).toBeNull()
+    }
+  })
+})

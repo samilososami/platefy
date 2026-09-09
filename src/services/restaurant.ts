@@ -1,5 +1,5 @@
 export type RestaurantLocale = 'es' | 'en' | 'ca'
-export type RestaurantSlug = 'ko' | 'vita'
+export type RestaurantSlug = 'ko' | 'vita' | 'pica-pica'
 export type MenuCategory = 'entrante' | 'principal' | 'postre' | 'bebida'
 
 export interface MenuDish {
@@ -53,11 +53,32 @@ const IDENTITY_URL = '/platefy.md'
 const knowledgePromises = new Map<RestaurantSlug, Promise<RestaurantKnowledge>>()
 
 export function isRestaurantSlug(value: unknown): value is RestaurantSlug {
-  return value === 'ko' || value === 'vita'
+  return value === 'ko' || value === 'vita' || value === 'pica-pica'
 }
 
-export function getRestaurantSlug(pathname = typeof window === 'undefined' ? '/chatbot' : window.location.pathname): RestaurantSlug {
-  const slug = pathname.match(/^\/restaurantes\/(ko|vita)(?:\/|$)/)?.[1]
+export function restaurantName(slug: RestaurantSlug): string {
+  return { ko: 'Kō', vita: 'Vita', 'pica-pica': 'Pica Pica' }[slug]
+}
+
+export function restaurantAssetRoot(slug: RestaurantSlug): string {
+  if (!isRestaurantSlug(slug)) throw new Error('INVALID_RESTAURANT')
+  return slug === 'pica-pica' ? '/demos/pica-pica' : `/restaurantes/${slug}`
+}
+
+export function restaurantMenuPath(slug: RestaurantSlug): string {
+  return `${restaurantAssetRoot(slug)}/menu.json`
+}
+
+export function getRestaurantSlug(
+  pathname = typeof window === 'undefined' ? '/chatbot' : window.location.pathname,
+  search = typeof window !== 'undefined' && pathname === window.location.pathname ? window.location.search : '',
+): RestaurantSlug {
+  const [route, inlineSearch] = pathname.split('?', 2)
+  if (/^\/demo\/chat\/?$/.test(route)) {
+    const selected = new URLSearchParams(inlineSearch ?? search).getAll('restaurant')
+    return selected.length === 1 && isRestaurantSlug(selected[0]) ? selected[0] : 'ko'
+  }
+  const slug = route.match(/^\/restaurantes\/(ko|vita)(?:\/|$)/)?.[1]
   return isRestaurantSlug(slug) ? slug : 'ko'
 }
 
@@ -65,7 +86,9 @@ export function getRestaurantSlug(pathname = typeof window === 'undefined' ? '/c
 export function safeDishImage(dish: Pick<MenuDish, 'id' | 'nombre' | 'imagen' | 'imagen_alt'>, slug: RestaurantSlug): DishImage | null {
   const src = dish.imagen
   if (typeof src !== 'string' || !/^\/[a-zA-Z0-9_/-]+(?:\.[a-zA-Z0-9_-]+)*\.(?:avif|webp|png|jpe?g)$/i.test(src)) return null
-  if (!src.startsWith(`/restaurantes/${slug}/`) && !src.startsWith(`/assets/restaurantes/${slug}/`)) return null
+  if (!isRestaurantSlug(slug)) return null
+  const roots = slug === 'pica-pica' ? ['/demos/pica-pica/'] : [`/restaurantes/${slug}/`, `/assets/restaurantes/${slug}/`]
+  if (!roots.some(root => src.startsWith(root))) return null
   return { id: dish.id, nombre: dish.nombre, src, alt: dish.imagen_alt?.trim() || dish.nombre }
 }
 
@@ -85,7 +108,7 @@ export function loadRestaurantKnowledge(force = false, slug: RestaurantSlug = ge
   if (existing && !force) return existing
   const pending = Promise.all([
     fetch(IDENTITY_URL, { credentials: 'same-origin', cache: 'no-cache' }),
-    fetch(`/restaurantes/${slug}/menu.json`, { credentials: 'same-origin', cache: 'no-cache' }),
+    fetch(restaurantMenuPath(slug), { credentials: 'same-origin', cache: 'no-cache' }),
   ]).then(async ([identityResponse, menuResponse]) => {
     if (!identityResponse.ok || !menuResponse.ok) throw new Error('KNOWLEDGE_UNAVAILABLE')
     const [identity, menuValue] = await Promise.all([identityResponse.text(), menuResponse.json()])
@@ -208,7 +231,10 @@ export function getGroundedContext(knowledge: RestaurantKnowledge, question: str
   const restaurant = knowledge.menu.restaurante
   const selection = filter.dishes.slice(0, filter.applied.length ? 14 : 34)
   const candidates = selection.length > 14 ? selection.map(leanDish) : selection.map(compactDish)
-  const system = [knowledge.identity, `Eres platefy, el asistente de ${restaurant.nombre}. Solo conoces la carta de este restaurante. Las conversaciones anteriores no son una fuente de datos. Nunca inventes platos, precios, ingredientes o imágenes. No escribas URLs ni imágenes Markdown: la aplicación añade las fotografías verificadas.`, 'DATOS_DEL_RESTAURANTE (fuente: menu.json):', JSON.stringify({
+  const identity = restaurant.slug === 'pica-pica'
+    ? `${knowledge.identity}\nLos nombres y precios de Pica Pica se transcriben de una carta fotografiada. Sus descripciones, ingredientes y alérgenos son propuestas de demostración sin verificar: explícalo si se consulta la composición y nunca presentes un plato como seguro para una alergia. Todos los platos pueden contener trazas de marisco. No hay fotografías de platos disponibles.`
+    : knowledge.identity
+  const system = [identity, `Eres platefy, el asistente de ${restaurant.nombre}. Solo conoces la carta de este restaurante. Las conversaciones anteriores no son una fuente de datos. Nunca inventes platos, precios, ingredientes o imágenes. No escribas URLs ni imágenes Markdown: la aplicación añade las fotografías verificadas.`, 'DATOS_DEL_RESTAURANTE (fuente: menu.json):', JSON.stringify({
     nombre: restaurant.nombre, ficticio: restaurant.ficticio, cocina: restaurant.tipo_cocina,
     moneda: restaurant.moneda, horarios_cocina: restaurant.horarios_cocina,
     direccion: restaurant.direccion, telefono: restaurant.telefono,

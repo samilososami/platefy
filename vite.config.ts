@@ -8,7 +8,7 @@ export default defineConfig({
         outDir: process.env.APPDEPLOY_VITE_OUT_DIR || 'dist',
         sourcemap: false,
         rollupOptions: {
-            input: ['index.html', 'chatbot/index.html', 'settings/index.html', '404.html', 'restaurantes/index.html', 'restaurantes/ko/index.html', 'restaurantes/vita/index.html', 'restaurantes/ko/platefy/index.html', 'restaurantes/vita/platefy/index.html'],
+            input: ['demo/chat/index.html', 'index.html', 'chatbot/index.html', 'settings/index.html', '404.html', 'restaurantes/index.html', 'restaurantes/ko/index.html', 'restaurantes/vita/index.html', 'restaurantes/ko/platefy/index.html', 'restaurantes/vita/platefy/index.html'],
             maxParallelFileOps: 128,
         },
     },

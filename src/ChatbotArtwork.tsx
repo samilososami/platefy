@@ -1,7 +1,7 @@
-import type { RestaurantSlug } from './services/restaurant';
+import { restaurantAssetRoot, type RestaurantSlug } from './services/restaurant';
 
 export function chatbotArtwork(restaurant: RestaurantSlug, name: 'foliage' | 'garden' | 'orb') {
-  return `/restaurantes/${restaurant}/chat-assets/${name}.webp`;
+  return `${restaurantAssetRoot(restaurant)}/chat-assets/${restaurant === 'pica-pica' && name !== 'orb' ? 'ornament' : name}.webp`;
 }
 
 /** Decorative artwork stays outside the reading and interaction layers. */

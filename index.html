@@ -35,7 +35,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
-    <link rel="preload" href="/images/platefy-orb.webp" as="image" type="image/webp" fetchpriority="high">
+
     <title>platefy — IA que atiende tu restaurante</title>
 
     <script type="application/ld+json">
@@ -64,7 +64,7 @@
             "name": "platefy",
             "applicationCategory": "BusinessApplication",
             "operatingSystem": "Web",
-            "url": "https://platefy.samilososami.com/restaurantes/",
+            "url": "https://platefy.samilososami.com/#producto",
             "description": "Asistente web para consultar cartas, recibir recomendaciones y resolver dudas sobre un restaurante.",
             "author": { "@id": "https://platefy.samilososami.com/#organization" }
           },
@@ -116,10 +116,6 @@
             </select>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
           </label>
-          <a class="button button-dark header-cta" href="/restaurantes/">
-            <span data-i18n="nav.try">Ver restaurantes</span>
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M7 5h8v8"/></svg>
-          </a>
           <button class="menu-button" id="menu-button" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="site-navigation">
             <span></span><span></span>
           </button>
@@ -133,47 +129,24 @@
         <h1 id="hero-title" data-i18n="hero.title">platefy</h1>
         <p class="hero-copy" data-i18n="hero.body">Responde, recomienda y orienta. platefy atiende a cada cliente desde tu propia web.</p>
         <div class="hero-actions">
-          <a class="button button-dark" href="/restaurantes/">
-            <span data-i18n="hero.primary">Ver restaurantes</span>
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14M12 5l5 5-5 5"/></svg>
-          </a>
           <a class="text-link" href="#como-funciona" data-i18n="hero.secondary">Ver cómo funciona</a>
         </div>
         <p class="hero-note" data-i18n="hero.note">Sin apps. En tu web. En su idioma.</p>
       </section>
 
-      <section class="demo-wrap" id="producto" aria-labelledby="demo-title">
-        <div class="demo-stage reveal" role="group" aria-label="Vista del asistente platefy conversando sobre la carta de un restaurante" data-i18n-aria="demo.aria">
-          <header class="demo-header">
-            <span class="eyebrow" data-i18n="demo.label">PRESENTACIÓN</span>
-            <span class="live-status"><i></i><span data-i18n="demo.status">Disponible ahora</span></span>
-          </header>
-          <div class="demo-grid">
-            <div class="orb-cell" role="img" aria-label="Mascota esférica de platefy" data-i18n-aria="orb.aria">
-              <div class="landing-orb" aria-hidden="true">
-                <span class="landing-orb-halo"></span>
-                <span class="landing-orb-body"><img src="/images/platefy-orb.webp" alt="" width="1254" height="1254" fetchpriority="high"><i></i></span>
-                <span class="landing-orb-shadow"></span>
-              </div>
-            </div>
-            <div class="demo-conversation">
-              <p class="demo-hello" id="demo-title" data-i18n="demo.hello">Hola. Soy platefy.</p>
-              <p class="demo-help" data-i18n="demo.help">¿En qué puedo ayudarte?</p>
-              <figure class="conversation-sample">
-                <blockquote data-i18n="demo.question">¿Qué me recomiendas sin lactosa?</blockquote>
-                <figcaption><span>platefy</span><p data-i18n="demo.answer">Te recomiendo la ensalada de quinoa y aguacate: fresca, completa y sin lactosa.</p></figcaption>
-              </figure>
-            </div>
-            <aside class="knowledge-list" aria-labelledby="knowledge-title">
-              <p class="eyebrow" id="knowledge-title" data-i18n="demo.knows">CONOCE TU RESTAURANTE</p>
-              <ul>
-                <li><span>01</span><span data-i18n="demo.item1">Carta e ingredientes</span></li>
-                <li><span>02</span><span data-i18n="demo.item2">Horarios y local</span></li>
-                <li><span>03</span><span data-i18n="demo.item3">Preferencias y reservas</span></li>
-              </ul>
-            </aside>
-          </div>
+      <section class="restaurant-demo" id="producto" aria-labelledby="demo-title">
+        <div class="demo-intro"><h2 id="demo-title" data-i18n="live.title">Una voz. Tres personalidades.</h2><p data-i18n="live.subtitle">Elige un restaurante y habla con platefy.</p></div>
+        <div class="demo-chooser" role="tablist" aria-label="Elige un restaurante" data-i18n-aria="live.chooser">
+          <button type="button" class="demo-tab" id="demo-tab-ko" role="tab" aria-selected="false" tabindex="-1" aria-controls="demo-panel" data-restaurant="ko"><span>Kō</span><small data-i18n="live.ko">Cocina japonesa</small></button>
+          <button type="button" class="demo-tab" id="demo-tab-vita" role="tab" aria-selected="false" tabindex="-1" aria-controls="demo-panel" data-restaurant="vita"><span>Vita</span><small data-i18n="live.vita">Cocina vegetal</small></button>
+          <button type="button" class="demo-tab" id="demo-tab-pica-pica" role="tab" aria-selected="true" tabindex="0" aria-controls="demo-panel" data-restaurant="pica-pica"><span>Pica Pica</span><small data-i18n="live.pica">Tapas y mar</small></button>
         </div>
+        <div class="demo-swipe"><button type="button" data-demo-step="-1" aria-label="Restaurante anterior" data-i18n-aria="live.previous"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12 4-6 6 6 6"/></svg></button><span data-i18n="live.swipe">Desliza para cambiar</span><button type="button" data-demo-step="1" aria-label="Siguiente restaurante" data-i18n-aria="live.next"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m8 4 6 6-6 6"/></svg></button></div>
+        <div class="demo-experience" id="demo-panel" role="tabpanel" aria-labelledby="demo-tab-pica-pica" data-theme="pica-pica">
+          <aside class="demo-identity"><div class="demo-identity-copy"><h3 id="demo-restaurant-name">Pica Pica</h3><p id="demo-restaurant-story" data-i18n="live.story">Tapas, mar y buenas conversaciones.</p></div><img id="demo-artwork" src="/demos/pica-pica/chat-assets/coast.webp" alt="" aria-hidden="true" width="900" height="900" loading="lazy"></aside>
+          <div class="demo-chat-slot" id="demo-chat-slot"><div class="demo-frame-status" role="status"><p data-i18n="live.loading">Preparando tu mesa…</p><button type="button" id="demo-retry" hidden data-i18n="live.retry">Volver a intentar</button></div></div>
+        </div>
+        <noscript><p class="demo-noscript">Activa JavaScript para conversar con los restaurantes de muestra.</p></noscript>
       </section>
 
       <section class="intro-section section-pad reveal" aria-labelledby="intro-title">
@@ -239,10 +212,6 @@
       <section class="closing-section" aria-labelledby="closing-title">
         <p class="eyebrow" data-i18n="closing.label">UNA MEJOR BIENVENIDA</p>
         <h2 id="closing-title" data-i18n="closing.title">Cada gran experiencia empieza con una buena conversación.</h2>
-        <a class="button button-light" href="/restaurantes/">
-          <span data-i18n="closing.cta">Encuentra tu restaurante</span>
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14M12 5l5 5-5 5"/></svg>
-        </a>
       </section>
     </main>
 
@@ -254,7 +223,6 @@
           <a href="#como-funciona" data-i18n="nav.how">Cómo funciona</a>
           <a href="#faq" data-i18n="nav.faq">FAQ</a>
         </nav>
-        <a class="footer-chat" href="/restaurantes/"><span data-i18n="footer.chat">Ver restaurantes</span><span>↗</span></a>
       </div>
       <div class="footer-bottom"><span data-i18n="footer.rights">© 2026 platefy</span><span>Barcelona</span></div>
     </footer>

@@ -1,0 +1,968 @@
+{
+  "schema_version": "1.0",
+  "actualizado": "2026-09-09",
+  "fuente": {
+    "tipo": "carta_fotografiada",
+    "origen": "Referencia de Pica Pica aportada en Figma",
+    "nombres_precios": "Transcritos de la fotografía; se normalizan espacios y apóstrofos.",
+    "composicion": "Descripciones, ingredientes, dietas y alérgenos inferidos para esta demostración; no verificados por el restaurante.",
+    "aviso_original": "Tots els plats poden tindre traces de marisc."
+  },
+  "restaurante": {
+    "nombre": "Pica Pica",
+    "slug": "pica-pica",
+    "descripcion": "Bar de tapas mediterráneas, marisco y cocina de siempre.",
+    "titular": "La vida és millor amb tapes.",
+    "subtitulo": "Buena comida, buenas vibras (y precios).",
+    "ficticio": true,
+    "tipo_cocina": [
+      "tapas",
+      "mediterránea",
+      "marisco",
+      "catalana"
+    ],
+    "moneda": "EUR",
+    "horarios_cocina": {
+      "comidas": "No facilitado en la carta.",
+      "cenas": "No facilitado en la carta."
+    },
+    "direccion": null,
+    "telefono": null,
+    "reservas_en_tiempo_real": false,
+    "aviso_alergenos": "Tots els plats poden tindre traces de marisc. Todos los platos pueden contener trazas de marisco. Las descripciones, ingredientes, dietas y alérgenos de esta demostración son propuestas inferidas, no datos verificados por el restaurante. No se puede garantizar que ningún plato sea apto para una alergia. Confirma siempre la composición, las trazas y la contaminación cruzada con el personal."
+  },
+  "categorias": [
+    "entrante",
+    "principal",
+    "postre",
+    "bebida"
+  ],
+  "alergenos_controlados": [
+    "gluten",
+    "crustaceos",
+    "huevo",
+    "pescado",
+    "cacahuetes",
+    "soja",
+    "leche",
+    "frutos_de_cascara",
+    "apio",
+    "mostaza",
+    "sesamo",
+    "sulfitos",
+    "altramuces",
+    "moluscos"
+  ],
+  "platos": [
+    {
+      "id": "musclos-planxa",
+      "nombre": "Musclos a la planxa",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 13.5,
+      "descripcion": "Mejillones a la plancha.",
+      "ingredientes": [
+        "mejillones",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "moluscos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "cargols-mar",
+      "nombre": "Cargols de Mar",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 19,
+      "descripcion": "Caracoles de mar.",
+      "ingredientes": [
+        "caracoles de mar",
+        "agua",
+        "sal"
+      ],
+      "alergenos": [
+        "moluscos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "navalles-planxa",
+      "nombre": "Navalles a la Planxa",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 16.5,
+      "descripcion": "Navajas a la plancha.",
+      "ingredientes": [
+        "navajas",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "moluscos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "kirles-vi-blanc",
+      "nombre": "Kirles al vi blanc",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 15.5,
+      "descripcion": "Chirlas al vino blanco.",
+      "ingredientes": [
+        "chirlas",
+        "vino blanco",
+        "ajo",
+        "aceite de oliva"
+      ],
+      "alergenos": [
+        "moluscos",
+        "sulfitos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "calamares-romana",
+      "nombre": "Calamares a la romana",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 16.8,
+      "descripcion": "Calamares rebozados y fritos.",
+      "ingredientes": [
+        "calamar",
+        "harina de trigo",
+        "huevo",
+        "aceite vegetal",
+        "sal"
+      ],
+      "alergenos": [
+        "moluscos",
+        "gluten",
+        "huevo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "bunyols-bacalla",
+      "nombre": "Bunyols de bacallà",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 15,
+      "descripcion": "Buñuelos de bacalao.",
+      "ingredientes": [
+        "bacalao",
+        "harina de trigo",
+        "huevo",
+        "ajo",
+        "perejil",
+        "aceite vegetal"
+      ],
+      "alergenos": [
+        "pescado",
+        "gluten",
+        "huevo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "calamares-murralla",
+      "nombre": "Calamares (murrall)",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 14.5,
+      "descripcion": "Calamares pequeños; preparación propuesta frita.",
+      "ingredientes": [
+        "calamar",
+        "harina de trigo",
+        "aceite vegetal",
+        "sal"
+      ],
+      "alergenos": [
+        "moluscos",
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "seitons-fregits",
+      "nombre": "Seitons fregits",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 14,
+      "descripcion": "Boquerones fritos.",
+      "ingredientes": [
+        "boquerones",
+        "harina de trigo",
+        "aceite vegetal",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado",
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "anxoves-escala",
+      "nombre": "Anxoves de l’Escala",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 19.5,
+      "descripcion": "Anchoas de l’Escala.",
+      "ingredientes": [
+        "anchoas",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "sardines-planxa",
+      "nombre": "Sardines a la planxa",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 13,
+      "descripcion": "Sardinas a la plancha.",
+      "ingredientes": [
+        "sardinas",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "sipia-planxa",
+      "nombre": "Sipia a la planxa",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 16.5,
+      "descripcion": "Sepia a la plancha.",
+      "ingredientes": [
+        "sepia",
+        "aceite de oliva",
+        "ajo",
+        "perejil"
+      ],
+      "alergenos": [
+        "moluscos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "cloisses-planxa",
+      "nombre": "Cloïsses planxa",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 18.8,
+      "descripcion": "Almejas a la plancha.",
+      "ingredientes": [
+        "almejas",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "moluscos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "cloisses-marinera",
+      "nombre": "Cloïsses Marinera",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 19.5,
+      "descripcion": "Almejas a la marinera.",
+      "ingredientes": [
+        "almejas",
+        "tomate",
+        "cebolla",
+        "ajo",
+        "vino blanco",
+        "harina de trigo",
+        "aceite de oliva"
+      ],
+      "alergenos": [
+        "moluscos",
+        "sulfitos",
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "pota-pop-brasa",
+      "nombre": "Pota de Pop a la brasa",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 22,
+      "descripcion": "Pata de pulpo a la brasa.",
+      "ingredientes": [
+        "pulpo",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "moluscos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "escamarlans-planxa",
+      "nombre": "Escamarlans a la planxa",
+      "seccion": "Para empezar",
+      "categoria": "entrante",
+      "precio": 35,
+      "descripcion": "Cigalas a la plancha.",
+      "ingredientes": [
+        "cigalas",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "crustaceos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "patates-braves",
+      "nombre": "Patates braves",
+      "seccion": "Tapas",
+      "categoria": "entrante",
+      "precio": 5.5,
+      "descripcion": "Patatas con salsa brava.",
+      "ingredientes": [
+        "patatas",
+        "tomate",
+        "pimentón",
+        "ajo",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 1,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "croquetes-casolanes",
+      "nombre": "Croquetes casolanes",
+      "seccion": "Tapas",
+      "categoria": "entrante",
+      "precio": 6.5,
+      "descripcion": "Croquetas caseras; la carta no especifica el relleno. Consultar con el personal.",
+      "ingredientes": [
+        "harina de trigo",
+        "leche",
+        "huevo",
+        "pan rallado",
+        "aceite vegetal",
+        "relleno por confirmar"
+      ],
+      "alergenos": [
+        "gluten",
+        "leche",
+        "huevo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "pebrots-padro",
+      "nombre": "Pebrots de padró",
+      "seccion": "Tapas",
+      "categoria": "entrante",
+      "precio": 7,
+      "descripcion": "Pimientos de Padrón fritos.",
+      "ingredientes": [
+        "pimientos de Padrón",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 1,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "tires-pollastre",
+      "nombre": "Tires de pollastre",
+      "seccion": "Tapas",
+      "categoria": "entrante",
+      "precio": 8.5,
+      "descripcion": "Tiras de pollo; preparación propuesta rebozada.",
+      "ingredientes": [
+        "pollo",
+        "harina de trigo",
+        "huevo",
+        "pan rallado",
+        "aceite vegetal"
+      ],
+      "alergenos": [
+        "gluten",
+        "huevo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "carne"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "alberginia-mel",
+      "nombre": "Albergínia amb mel",
+      "seccion": "Tapas",
+      "categoria": "entrante",
+      "precio": 6,
+      "descripcion": "Berenjena con miel.",
+      "ingredientes": [
+        "berenjena",
+        "miel",
+        "harina de trigo",
+        "aceite vegetal"
+      ],
+      "alergenos": [
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "salmo-planxa",
+      "nombre": "Salmó a la planxa",
+      "seccion": "Peixos",
+      "categoria": "principal",
+      "precio": 13.5,
+      "descripcion": "Salmón a la plancha.",
+      "ingredientes": [
+        "salmón",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "llobarro-forn",
+      "nombre": "Llobarro al forn",
+      "seccion": "Peixos",
+      "categoria": "principal",
+      "precio": 16,
+      "descripcion": "Lubina al horno.",
+      "ingredientes": [
+        "lubina",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "tonyina-planxa",
+      "nombre": "Tonyina a la planxa",
+      "seccion": "Peixos",
+      "categoria": "principal",
+      "precio": 18,
+      "descripcion": "Atún a la plancha.",
+      "ingredientes": [
+        "atún",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "bacalla-samfaina",
+      "nombre": "Bacallà amb samfaina",
+      "seccion": "Peixos",
+      "categoria": "principal",
+      "precio": 17.5,
+      "descripcion": "Bacalao con samfaina de verduras.",
+      "ingredientes": [
+        "bacalao",
+        "tomate",
+        "berenjena",
+        "calabacín",
+        "pimiento",
+        "cebolla",
+        "aceite de oliva"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "entrecot",
+      "nombre": "Entrecot",
+      "seccion": "Carnes",
+      "categoria": "principal",
+      "precio": 18,
+      "descripcion": "Entrecot de ternera.",
+      "ingredientes": [
+        "ternera",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "carne"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "costelles-xai",
+      "nombre": "Costelles de xai",
+      "seccion": "Carnes",
+      "categoria": "principal",
+      "precio": 16.5,
+      "descripcion": "Costillas de cordero.",
+      "ingredientes": [
+        "cordero",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "carne"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "pollastre-brasa",
+      "nombre": "Pollastre a la brasa",
+      "seccion": "Carnes",
+      "categoria": "principal",
+      "precio": 12,
+      "descripcion": "Pollo a la brasa.",
+      "ingredientes": [
+        "pollo",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "carne"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "botifarra-mongetes",
+      "nombre": "Botifarra amb mongetes",
+      "seccion": "Carnes",
+      "categoria": "principal",
+      "precio": 11.5,
+      "descripcion": "Butifarra con judías blancas.",
+      "ingredientes": [
+        "butifarra de cerdo",
+        "judías blancas",
+        "ajo",
+        "perejil",
+        "aceite de oliva"
+      ],
+      "alergenos": [
+        "sulfitos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "carne"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "crema-catalana",
+      "nombre": "Crema catalana",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 5.5,
+      "descripcion": "Crema catalana con azúcar caramelizado.",
+      "ingredientes": [
+        "leche",
+        "yema de huevo",
+        "azúcar",
+        "almidón de maíz",
+        "canela",
+        "piel de limón"
+      ],
+      "alergenos": [
+        "leche",
+        "huevo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "pastis-xocolata",
+      "nombre": "Pastís de xocolata",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 5.5,
+      "descripcion": "Pastel de chocolate.",
+      "ingredientes": [
+        "chocolate",
+        "harina de trigo",
+        "huevo",
+        "mantequilla",
+        "azúcar"
+      ],
+      "alergenos": [
+        "gluten",
+        "huevo",
+        "leche",
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "gelat-artesa",
+      "nombre": "Gelat artesà",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 4.5,
+      "descripcion": "Helado artesano. La carta no especifica los sabores; consultar con el personal.",
+      "ingredientes": [
+        "leche",
+        "nata",
+        "azúcar",
+        "sabor por confirmar"
+      ],
+      "alergenos": [
+        "leche"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "fruita-temporada",
+      "nombre": "Fruita de temporada",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 4,
+      "descripcion": "Fruta de temporada. La variedad depende de la selección del restaurante.",
+      "ingredientes": [
+        "fruta de temporada por confirmar"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "aigua",
+      "nombre": "Aigua",
+      "seccion": "Begudes",
+      "categoria": "bebida",
+      "precio": 2,
+      "descripcion": "Agua.",
+      "ingredientes": [
+        "agua"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "refrescos",
+      "nombre": "Refrescos",
+      "seccion": "Begudes",
+      "categoria": "bebida",
+      "precio": 3,
+      "descripcion": "Refrescos. Consultar las variedades y su composición con el personal.",
+      "ingredientes": [
+        "agua",
+        "azúcar o edulcorantes por confirmar",
+        "aromas por confirmar"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "cervesa",
+      "nombre": "Cervesa",
+      "seccion": "Begudes",
+      "categoria": "bebida",
+      "precio": 3.5,
+      "descripcion": "Cerveza. Contiene alcohol.",
+      "ingredientes": [
+        "agua",
+        "malta de cebada",
+        "lúpulo",
+        "levadura"
+      ],
+      "alergenos": [
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "vi-copa",
+      "nombre": "Vi (copa)",
+      "seccion": "Begudes",
+      "categoria": "bebida",
+      "precio": 4,
+      "descripcion": "Una copa de vino. Contiene alcohol.",
+      "ingredientes": [
+        "uva",
+        "sulfitos"
+      ],
+      "alergenos": [
+        "sulfitos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "cava",
+      "nombre": "Cava",
+      "seccion": "Begudes",
+      "categoria": "bebida",
+      "precio": 4.5,
+      "descripcion": "Cava. Contiene alcohol.",
+      "ingredientes": [
+        "uva",
+        "sulfitos"
+      ],
+      "alergenos": [
+        "sulfitos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    }
+  ]
+}

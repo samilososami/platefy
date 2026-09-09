@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import handler, { menuImages } from '../api/chat'
 import type { RestaurantMenu } from '../src/services/restaurant'
 import fixture from './fixtures/menu.json'
+import picaData from '../public/demos/pica-pica/menu.json'
 
 vi.mock('node:fs', async importOriginal => {
   const actual = await importOriginal<typeof import('node:fs')>()
@@ -62,6 +63,7 @@ beforeEach(() => {
     if (name.endsWith('/public/platefy.md')) return 'Eres platefy. Ayudas con la carta del restaurante.'
     if (name.endsWith('/public/restaurantes/ko/menu.json')) return JSON.stringify(ko)
     if (name.endsWith('/public/restaurantes/vita/menu.json')) return JSON.stringify(vita)
+    if (name.endsWith('/public/demos/pica-pica/menu.json')) return JSON.stringify(picaData)
     throw new Error(`Unexpected knowledge file: ${name}`)
   })
 })
@@ -144,5 +146,37 @@ describe('restaurant chat function', () => {
 
   it('uses the previous recommendation for a follow-up photo request', () => {
     expect(menuImages(ko, [{ role: 'assistant', content: 'Te recomiendo Nigiri de salmón.' }, { role: 'user', content: '¿Cómo se ve?' }], 'ko')?.[0].id).toBe('ko-nigiri')
+  })
+})
+
+
+describe('Pica Pica demo backend', () => {
+  it('reads only its own demo menu and forwards the photographed price and uncertainty notice', async () => {
+    const upstream = vi.fn().mockResolvedValue(cloudflareResult('Patates braves cuesta 5,50 € según la carta.'))
+    vi.stubGlobal('fetch', upstream)
+    const res = response()
+    await handler(request({ restaurant: 'pica-pica', messages: [{ role: 'user', content: '¿Cuánto cuestan las Patates braves?' }] }, '127.0.0.81') as never, res as never)
+    expect(res.statusCode).toBe(200)
+    const system = upstreamBody(upstream).messages[0].content
+    expect(system).toContain('Pica Pica')
+    expect(system).toContain('"precio":5.5')
+    expect(system).toContain('sin verificar')
+    expect(system).toContain('trazas de marisco')
+    expect(system).not.toContain('ko-nigiri')
+    expect(system).not.toContain('vita-tomate')
+    expect(vi.mocked(readFileSync).mock.calls.map(call => String(call[0]))).toEqual([
+      expect.stringContaining('/public/platefy.md'), expect.stringContaining('/public/demos/pica-pica/menu.json'),
+    ])
+  })
+
+  it('does not substitute decorative demo assets for a missing dish photo', async () => {
+    const upstream = vi.fn()
+    vi.stubGlobal('fetch', upstream)
+    const res = response()
+    await handler(request({ restaurant: 'pica-pica', messages: [{ role: 'user', content: 'Foto de Patates braves' }] }, '127.0.0.82') as never, res as never)
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('Todavía no tenemos fotografía de Patates braves.')
+    expect(res.body).toContain('"platefy_images":[]')
+    expect(upstream).not.toHaveBeenCalled()
   })
 })

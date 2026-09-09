@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { ALLERGEN_IDS, excludedAllergens, filterMenu, getGroundedContext, isRestaurantSlug, safeDishImage, type RestaurantSlug, type RestaurantMenu, type MenuFilterResult, type DishImage, type MenuDish } from '../src/services/restaurant.js'
+import { ALLERGEN_IDS, excludedAllergens, filterMenu, getGroundedContext, isRestaurantSlug, restaurantMenuPath, safeDishImage, type RestaurantSlug, type RestaurantMenu, type MenuFilterResult, type DishImage, type MenuDish } from '../src/services/restaurant.js'
 
 export { filterMenu } from '../src/services/restaurant.js'
 
@@ -86,7 +86,7 @@ function sources(slug: RestaurantSlug) {
   // The allowlist is checked before constructing a path; client content never becomes a knowledge file.
   const directory = path.join(process.cwd(), 'public')
   const identity = readFileSync(path.join(directory, 'platefy.md'), 'utf8').trim()
-  const menu = JSON.parse(readFileSync(path.join(directory, 'restaurantes', slug, 'menu.json'), 'utf8')) as RestaurantMenu
+  const menu = JSON.parse(readFileSync(path.join(directory, restaurantMenuPath(slug).slice(1)), 'utf8')) as RestaurantMenu
   if (!identity || menu.restaurante?.slug !== slug || !Array.isArray(menu.platos)) throw new Error('KNOWLEDGE_INVALID')
   return { identity, menu }
 }
