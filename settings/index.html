@@ -5,23 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#f5f1e8">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="Estado privado de la conexión de Platefy con Cloudflare Workers AI.">
+  <meta name="description" content="Comprueba el estado de la conexión del asistente platefy.">
   <link rel="canonical" href="https://platefy.samilososami.com/api/">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-  <title>Conexión Cloudflare — Platefy</title>
+  <title>Conexión — platefy</title>
 </head>
 <body>
   <main class="api-page">
     <nav class="api-nav" aria-label="Navegación">
-      <a class="api-brand" href="../" aria-label="Platefy, inicio">platefy</a>
-      <a class="api-back" href="../chatbot/">Volver al chatbot <span aria-hidden="true">↗</span></a>
+      <a class="api-brand" href="../" aria-label="platefy, inicio">platefy</a>
+      <a class="api-back" href="/restaurantes/">Ver restaurantes <span aria-hidden="true">↗</span></a>
     </nav>
 
     <section class="api-layout" aria-labelledby="api-title">
       <div class="api-intro">
-        <span class="api-kicker">Conexión del modelo</span>
-        <h1 id="api-title">Cloudflare,<br><em>lista para servir.</em></h1>
-        <p>Platefy usa Qwen3 30B-A3B para redactar respuestas a partir de MENU.json y PL8.md. La conexión privada del servidor se utiliza automáticamente.</p>
+        <span class="api-kicker">Estado del asistente</span>
+        <h1 id="api-title">platefy,<br><em>listo para servir.</em></h1>
+        <p>platefy responde con la carta del restaurante seleccionado. La conexión del servidor se utiliza automáticamente.</p>
         <div class="api-status" role="status" aria-live="polite">
           <span class="api-status-dot" aria-hidden="true"></span>
           <span id="server-status">Comprobando la conexión del servidor…</span>
@@ -31,7 +31,7 @@
       <div class="api-card">
         <div class="api-card-head">
           <div class="api-orb" aria-hidden="true"><i></i><i></i></div>
-          <div><span>Workers AI</span><strong>Conexión privada del servidor</strong></div>
+          <div><span>platefy</span><strong>Conexión privada del servidor</strong></div>
         </div>
         <p class="api-card-copy">Las credenciales no se entregan al navegador. Vercel valida la pregunta y se comunica con un Worker privado que tiene acceso al modelo.</p>
         <div class="api-actions"><button class="api-primary" id="test-connection" type="button">Probar conexión</button></div>
