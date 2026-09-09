@@ -48,6 +48,16 @@ export function menuImages(menu: RestaurantMenu, messages: Message[], slug: Rest
   return imageSelection(menu, messages, slug)?.images ?? null
 }
 
+/** Attach only menu-owned photos for dishes the verified answer actually names. */
+export function answerImages(menu: RestaurantMenu, answer: string, slug: RestaurantSlug): DishImage[] {
+  const output = normalize(answer)
+  return menu.platos
+    .filter(dish => dish.disponible && output.includes(normalize(dish.nombre)))
+    .map(dish => safeDishImage(dish, slug))
+    .filter((image): image is DishImage => image !== null)
+    .slice(0, 2)
+}
+
 function streamAnswer(response: Response, answer: string, images: DishImage[] = [], result?: CloudflareResult, providerMs?: number) {
   response.statusCode = 200; response.setHeader('Content-Type', 'text/event-stream; charset=utf-8'); response.setHeader('X-Accel-Buffering', 'no')
   for (const content of answer.match(/[\s\S]{1,180}/g) || [answer]) response.write(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
@@ -163,8 +173,9 @@ export default async function handler(request: Request, response: Response) {
     if (!upstream.ok) { const error = upstreamError(upstream.status, await upstream.text()); return response.status(error.status).json({ error: error.message, reason: error.reason }) }
     const result = await upstream.json() as CloudflareResult
     const verified = validateAnswer(result.content || '', grounded.filter, knowledge.menu, payload.locale)
+    const images = answerImages(knowledge.menu, verified, payload.restaurant)
     const providerMs = performance.now() - upstreamStarted
-    return streamAnswer(response, verified, [], result, providerMs)
+    return streamAnswer(response, verified, images, result, providerMs)
   } catch (error) {
     if (response.headersSent) return response.end()
     const message = error instanceof Error ? error.message : ''

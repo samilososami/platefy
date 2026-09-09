@@ -73,9 +73,9 @@
       "dietas": [],
       "picante": 0,
       "disponible": true,
-      "imagen": null,
-      "imagen_alt": null,
-      "imagen_generada": false
+      "imagen": "/demos/pica-pica/images/musclos-planxa.webp",
+      "imagen_alt": "Mejillones a la plancha abiertos, con limón y perejil en una mesa mediterránea junto al mar; imagen ilustrativa.",
+      "imagen_generada": true
     },
     {
       "id": "cargols-mar",
@@ -295,9 +295,9 @@
       "dietas": [],
       "picante": 0,
       "disponible": true,
-      "imagen": null,
-      "imagen_alt": null,
-      "imagen_generada": false
+      "imagen": "/demos/pica-pica/images/sardines-planxa.webp",
+      "imagen_alt": "Sardinas enteras a la plancha con limón sobre una bandeja de cerámica azul junto al mar; imagen ilustrativa.",
+      "imagen_generada": true
     },
     {
       "id": "sipia-planxa",
@@ -444,9 +444,9 @@
       ],
       "picante": 1,
       "disponible": true,
-      "imagen": null,
-      "imagen_alt": null,
-      "imagen_generada": false
+      "imagen": "/demos/pica-pica/images/patates-braves.webp",
+      "imagen_alt": "Patates braves doradas con salsa brava y alioli sobre cerámica azul junto al mar; imagen ilustrativa.",
+      "imagen_generada": true
     },
     {
       "id": "croquetes-casolanes",

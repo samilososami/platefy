@@ -6,6 +6,8 @@ const section = document.querySelector<HTMLElement>('.restaurant-demo');
 const panel = document.querySelector<HTMLElement>('#demo-panel');
 const slot = document.querySelector<HTMLElement>('#demo-chat-slot');
 const chooser = document.querySelector<HTMLElement>('.demo-chooser');
+const mobileEntry = document.querySelector<HTMLButtonElement>('#demo-mobile-entry');
+const mobileQuery = window.matchMedia('(max-width: 700px)');
 const tabs = [...document.querySelectorAll<HTMLButtonElement>('.demo-tab')];
 const locale = (document.documentElement.lang === 'en' || document.documentElement.lang === 'ca' ? document.documentElement.lang : 'es') as Locale;
 const c = demoCopy[locale];
@@ -42,6 +44,13 @@ function mountChat() {
   timeout = window.setTimeout(() => {
     if (!status?.hidden) { if (statusText) statusText.textContent = c.error; if (retry) retry.hidden = false; }
   }, 20000);
+}
+
+function openMobileDemo() {
+  section?.classList.add('is-mobile-open');
+  mobileEntry?.setAttribute('aria-expanded', 'true');
+  if (!activated) { activated = true; mountChat(); }
+  window.requestAnimationFrame(() => chooser?.scrollTo({ left: Math.max(0, tabs[active].offsetLeft - (chooser.clientWidth - tabs[active].clientWidth) / 2), behavior: 'instant' }));
 }
 
 function choose(index: number, focus = false) {
@@ -82,6 +91,7 @@ chooser?.addEventListener('touchend', event => {
   if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) choose(active + (dx < 0 ? 1 : -1));
 }, { passive: true });
 retry?.addEventListener('click', mountChat);
+mobileEntry?.addEventListener('click', openMobileDemo);
 window.addEventListener('message', event => {
   if (event.origin !== location.origin || event.source !== frame?.contentWindow) return;
   if (event.data?.type === 'platefy:error' && event.data.restaurant === restaurants[active].slug) {
@@ -99,8 +109,12 @@ window.addEventListener('message', event => {
 window.addEventListener('pagehide', () => { window.clearTimeout(timeout); frame?.contentWindow?.postMessage({ type: 'platefy:pause' }, location.origin); });
 if (section) {
   const observer = new IntersectionObserver(entries => {
-    if (entries.some(entry => entry.isIntersecting) && !activated) { activated = true; mountChat(); observer.disconnect(); }
+    if (entries.some(entry => entry.isIntersecting) && !activated && !mobileQuery.matches) { activated = true; mountChat(); observer.disconnect(); }
   }, { rootMargin: '250px' });
   observer.observe(section);
 }
+mobileQuery.addEventListener('change', event => {
+  if (!event.matches && !activated) { activated = true; mountChat(); }
+  if (event.matches && activated) { section?.classList.add('is-mobile-open'); mobileEntry?.setAttribute('aria-expanded', 'true'); }
+});
 choose(active);

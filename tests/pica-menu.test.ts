@@ -15,10 +15,14 @@ describe('photographed Pica Pica menu', () => {
     expect(data.platos.find(dish => dish.id === 'botifarra-mongetes')?.nombre).toBe('Botifarra amb mongetes')
   })
 
-  it('preserves the original trace warning without inventing verified recipes, photos or venue details', () => {
+  it('preserves the original trace warning and limits photography to the three generated demo dishes', () => {
     expect(data.fuente.aviso_original).toBe('Tots els plats poden tindre traces de marisc.')
     expect(data.restaurante.aviso_alergenos).toContain(data.fuente.aviso_original)
-    expect(data.platos.every(dish => dish.alergenos_verificados === false && dish.imagen === null)).toBe(true)
+    expect(data.platos.every(dish => dish.alergenos_verificados === false)).toBe(true)
+    expect(data.platos.filter(dish => dish.imagen !== null).map(dish => dish.id)).toEqual([
+      'musclos-planxa', 'sardines-planxa', 'patates-braves',
+    ])
+    expect(data.platos.filter(dish => dish.imagen === null)).toHaveLength(34)
     expect(data.restaurante.direccion).toBeNull()
     expect(data.restaurante.telefono).toBeNull()
     expect(data.restaurante.reservas_en_tiempo_real).toBe(false)

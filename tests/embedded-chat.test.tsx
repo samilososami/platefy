@@ -26,6 +26,9 @@ describe('embedded demo readiness', () => {
     expect(notify.mock.calls.some(([data]) => data.type === 'platefy:ready')).toBe(false);
     await act(async () => { resolve(knowledge); });
     expect(notify).toHaveBeenCalledWith({ type: 'platefy:ready', restaurant: 'pica-pica' }, location.origin);
+    expect(screen.getByRole('heading', { name: 'Pica Pica' })).toBeTruthy();
+    expect(screen.queryByText('Pica Pica · platefy')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Nueva conversación' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Ver la carta', exact: true }));
     expect(screen.getByRole('dialog').textContent).toContain('Patates braves');
     expect(screen.queryByRole('link', { name: 'Volver a la carta' })).toBeNull();

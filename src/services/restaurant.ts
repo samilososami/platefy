@@ -232,7 +232,7 @@ export function getGroundedContext(knowledge: RestaurantKnowledge, question: str
   const selection = filter.dishes.slice(0, filter.applied.length ? 14 : 34)
   const candidates = selection.length > 14 ? selection.map(leanDish) : selection.map(compactDish)
   const identity = restaurant.slug === 'pica-pica'
-    ? `${knowledge.identity}\nLos nombres y precios de Pica Pica se transcriben de una carta fotografiada. Sus descripciones, ingredientes y alérgenos son propuestas de demostración sin verificar: explícalo si se consulta la composición y nunca presentes un plato como seguro para una alergia. Todos los platos pueden contener trazas de marisco. No hay fotografías de platos disponibles.`
+    ? `${knowledge.identity}\nLos nombres y precios de Pica Pica se transcriben de una carta fotografiada. Sus descripciones, ingredientes y alérgenos son propuestas de demostración sin verificar: explícalo si se consulta la composición y nunca presentes un plato como seguro para una alergia. Todos los platos pueden contener trazas de marisco.`
     : knowledge.identity
   const system = [identity, `Eres platefy, el asistente de ${restaurant.nombre}. Solo conoces la carta de este restaurante. Las conversaciones anteriores no son una fuente de datos. Nunca inventes platos, precios, ingredientes o imágenes. No escribas URLs ni imágenes Markdown: la aplicación añade las fotografías verificadas.`, 'DATOS_DEL_RESTAURANTE (fuente: menu.json):', JSON.stringify({
     nombre: restaurant.nombre, ficticio: restaurant.ficticio, cocina: restaurant.tipo_cocina,
@@ -242,6 +242,7 @@ export function getGroundedContext(knowledge: RestaurantKnowledge, question: str
   }), `FILTRO_DETERMINISTA: ${JSON.stringify({ aplicado: filter.applied, consulta_sensible: filter.isSafetyQuestion, coincidencias: filter.dishes.length })}`,
   'CANDIDATOS_VERIFICADOS (fuente: menu.json):', JSON.stringify(candidates),
   filter.applied.length ? 'La selección anterior ya aplica las restricciones detectadas. Recomienda únicamente esos candidatos; si está vacía, indica que no hay coincidencias.'
-    : 'Responde solo con los datos anteriores. Si la pregunta no trata sobre la carta, usa únicamente DATOS_DEL_RESTAURANTE.'].join('\n\n')
+    : 'Responde solo con los datos anteriores. Si la pregunta no trata sobre la carta, usa únicamente DATOS_DEL_RESTAURANTE.',
+  'Cuando recomiendes varios platos, elige como máximo cuatro. Escríbelos en una lista Markdown, una línea por plato, con este patrón: - **Nombre** — precio · motivo breve. No vuelques la carta completa ni encadenes nombres en un párrafo.'].join('\n\n')
   return { system, filter }
 }

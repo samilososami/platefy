@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { readFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import handler, { menuImages } from '../api/chat'
+import handler, { answerImages, menuImages } from '../api/chat'
 import type { RestaurantMenu } from '../src/services/restaurant'
 import fixture from './fixtures/menu.json'
 import picaData from '../public/demos/pica-pica/menu.json'
@@ -147,6 +147,13 @@ describe('restaurant chat function', () => {
   it('uses the previous recommendation for a follow-up photo request', () => {
     expect(menuImages(ko, [{ role: 'assistant', content: 'Te recomiendo Nigiri de salmón.' }, { role: 'user', content: '¿Cómo se ve?' }], 'ko')?.[0].id).toBe('ko-nigiri')
   })
+
+  it('attaches only menu-owned photos for dishes named in a generated recommendation', () => {
+    expect(answerImages(ko, '- **Nigiri de salmón** — 3,50 € · fresco.', 'ko')).toEqual([
+      expect.objectContaining({ id: 'ko-nigiri', src: '/restaurantes/ko/images/nigiri.webp' }),
+    ])
+    expect(answerImages(ko, 'Tomate de temporada', 'ko')).toEqual([])
+  })
 })
 
 
@@ -169,14 +176,14 @@ describe('Pica Pica demo backend', () => {
     ])
   })
 
-  it('does not substitute decorative demo assets for a missing dish photo', async () => {
+  it('serves the verified Pica Pica dish photo without invoking inference', async () => {
     const upstream = vi.fn()
     vi.stubGlobal('fetch', upstream)
     const res = response()
     await handler(request({ restaurant: 'pica-pica', messages: [{ role: 'user', content: 'Foto de Patates braves' }] }, '127.0.0.82') as never, res as never)
     expect(res.statusCode).toBe(200)
-    expect(res.body).toContain('Todavía no tenemos fotografía de Patates braves.')
-    expect(res.body).toContain('"platefy_images":[]')
+    expect(res.body).toContain('/demos/pica-pica/images/patates-braves.webp')
+    expect(res.body).toContain('Patates braves')
     expect(upstream).not.toHaveBeenCalled()
   })
 })

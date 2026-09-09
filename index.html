@@ -136,15 +136,22 @@
 
       <section class="restaurant-demo" id="producto" aria-labelledby="demo-title">
         <div class="demo-intro"><h2 id="demo-title" data-i18n="live.title">Una voz. Tres personalidades.</h2><p data-i18n="live.subtitle">Elige un restaurante y habla con platefy.</p></div>
-        <div class="demo-chooser" role="tablist" aria-label="Elige un restaurante" data-i18n-aria="live.chooser">
-          <button type="button" class="demo-tab" id="demo-tab-ko" role="tab" aria-selected="false" tabindex="-1" aria-controls="demo-panel" data-restaurant="ko"><span>Kō</span><small data-i18n="live.ko">Cocina japonesa</small></button>
-          <button type="button" class="demo-tab" id="demo-tab-vita" role="tab" aria-selected="false" tabindex="-1" aria-controls="demo-panel" data-restaurant="vita"><span>Vita</span><small data-i18n="live.vita">Cocina vegetal</small></button>
-          <button type="button" class="demo-tab" id="demo-tab-pica-pica" role="tab" aria-selected="true" tabindex="0" aria-controls="demo-panel" data-restaurant="pica-pica"><span>Pica Pica</span><small data-i18n="live.pica">Tapas y mar</small></button>
-        </div>
-        <div class="demo-swipe"><button type="button" data-demo-step="-1" aria-label="Restaurante anterior" data-i18n-aria="live.previous"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12 4-6 6 6 6"/></svg></button><span data-i18n="live.swipe">Desliza para cambiar</span><button type="button" data-demo-step="1" aria-label="Siguiente restaurante" data-i18n-aria="live.next"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m8 4 6 6-6 6"/></svg></button></div>
-        <div class="demo-experience" id="demo-panel" role="tabpanel" aria-labelledby="demo-tab-pica-pica" data-theme="pica-pica">
-          <aside class="demo-identity"><div class="demo-identity-copy"><h3 id="demo-restaurant-name">Pica Pica</h3><p id="demo-restaurant-story" data-i18n="live.story">Tapas, mar y buenas conversaciones.</p></div><img id="demo-artwork" src="/demos/pica-pica/chat-assets/coast.webp" alt="" aria-hidden="true" width="900" height="900" loading="lazy"></aside>
-          <div class="demo-chat-slot" id="demo-chat-slot"><div class="demo-frame-status" role="status"><p data-i18n="live.loading">Preparando tu mesa…</p><button type="button" id="demo-retry" hidden data-i18n="live.retry">Volver a intentar</button></div></div>
+        <button class="demo-mobile-entry" id="demo-mobile-entry" type="button" aria-expanded="false" aria-controls="demo-mobile-stage">
+          <span><i aria-hidden="true"><b></b><b></b><b></b></i><strong data-i18n="live.openDemo">Ver la demo</strong></span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"/></svg>
+        </button>
+        <p class="demo-mobile-context" data-i18n="live.mobileContext">Tres restaurantes ficticios. Tres identidades para probar.</p>
+        <div class="demo-stage" id="demo-mobile-stage">
+          <div class="demo-chooser" role="tablist" aria-label="Elige un restaurante" data-i18n-aria="live.chooser">
+            <button type="button" class="demo-tab" id="demo-tab-ko" role="tab" aria-selected="false" tabindex="-1" aria-controls="demo-panel" data-restaurant="ko"><span>Kō</span><small data-i18n="live.ko">Cocina japonesa</small><em data-i18n="live.koDetail">Sushi · restaurante japonés</em></button>
+            <button type="button" class="demo-tab" id="demo-tab-vita" role="tab" aria-selected="false" tabindex="-1" aria-controls="demo-panel" data-restaurant="vita"><span>Vita</span><small data-i18n="live.vita">Cocina vegetal</small><em data-i18n="live.vitaDetail">Vegetal · mediterráneo</em></button>
+            <button type="button" class="demo-tab" id="demo-tab-pica-pica" role="tab" aria-selected="true" tabindex="0" aria-controls="demo-panel" data-restaurant="pica-pica"><span>Pica Pica</span><small data-i18n="live.pica">Tapas y mar</small><em data-i18n="live.picaDetail">Tapas · cocina marinera</em></button>
+          </div>
+          <div class="demo-swipe"><button type="button" data-demo-step="-1" aria-label="Restaurante anterior" data-i18n-aria="live.previous"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12 4-6 6 6 6"/></svg></button><span data-i18n="live.swipe">Desliza para cambiar</span><button type="button" data-demo-step="1" aria-label="Siguiente restaurante" data-i18n-aria="live.next"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m8 4 6 6-6 6"/></svg></button></div>
+          <div class="demo-experience" id="demo-panel" role="tabpanel" aria-labelledby="demo-tab-pica-pica" data-theme="pica-pica">
+            <aside class="demo-identity"><div class="demo-identity-copy"><h3 id="demo-restaurant-name">Pica Pica</h3><p id="demo-restaurant-story" data-i18n="live.story">Tapas, mar y buenas conversaciones.</p></div><img id="demo-artwork" src="/demos/pica-pica/chat-assets/coast.webp" alt="" aria-hidden="true" width="900" height="900" loading="lazy"></aside>
+            <div class="demo-chat-slot" id="demo-chat-slot"><div class="demo-frame-status" role="status"><p data-i18n="live.loading">Preparando tu mesa…</p><button type="button" id="demo-retry" hidden data-i18n="live.retry">Volver a intentar</button></div></div>
+          </div>
         </div>
         <noscript><p class="demo-noscript">Activa JavaScript para conversar con los restaurantes de muestra.</p></noscript>
       </section>

@@ -14,7 +14,6 @@
 .chat-app--embedded .chat-main { width: 100%; }
 .chat-app--embedded .chat-header { min-height: 83px; padding: 20px 30px; gap: 14px; border-bottom: 0; }
 .chat-app--embedded .chat-header h1 { font-size: 31px; white-space: nowrap; }
-.chat-app--embedded .chat-header .chat-by { font-family: var(--sans); font-size: 18px; letter-spacing: -.04em; }
 .chat-app--embedded .chat-header-actions { gap: 8px; }
 .chat-app--embedded .chat-sound { padding: 0 10px; min-width: 44px; border: 0; background: transparent; }
 .chat-app--embedded .chat-sound span, .chat-app--embedded .chat-sound i { display: none; }
@@ -59,7 +58,6 @@
   .chat-app--embedded .chat-header { flex-wrap: wrap; padding: 13px 16px 8px; gap: 3px 8px; min-height: 90px; }
   .chat-app--embedded .chat-header-title { width: 100%; }
   .chat-app--embedded .chat-header h1 { font-size: 25px; }
-  .chat-app--embedded .chat-header .chat-by { font-size: 15px; }
   .chat-app--embedded .chat-header-actions { width: 100%; justify-content: flex-end; }
   .chat-app--embedded .embedded-tool span { display: inline; font-size: 11px; }
   .chat-app--embedded .embedded-tool { width: auto; gap: 5px; padding: 4px 8px; }

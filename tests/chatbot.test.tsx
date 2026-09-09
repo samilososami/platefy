@@ -80,4 +80,12 @@ describe('restaurant images', () => {
     expect(screen.queryByRole('button', { name: 'Razonar más' })).toBeNull();
     await waitFor(() => expect(generateReply).toHaveBeenCalledOnce());
   });
+
+  it('renders compact recommendation lists with emphasized dish names', async () => {
+    vi.mocked(generateReply).mockResolvedValueOnce('- **Nigiri de salmón** — 3,50 € · fresco.\n- **Edamame** — 4,50 € · ligero.');
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '¿Qué me recomiendas?' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar mensaje' }));
+    await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(2));
+    expect(screen.getByText('Nigiri de salmón').tagName).toBe('STRONG');
+  });
 });
