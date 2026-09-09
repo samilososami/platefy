@@ -66,14 +66,18 @@ describe('microphone lifecycle', () => {
   });
 });
 
-describe('Qwen reasoning mode', () => {
-  it('sends medium reasoning when the user enables Razonar más', async () => {
-    vi.mocked(generateReply).mockResolvedValueOnce('Respuesta verificada');
-    fireEvent.click(screen.getByRole('button', { name: 'Razonar más' }));
-    const input = screen.getByRole('textbox', { name: 'Tu mensaje' });
-    fireEvent.change(input, { target: { value: '¿Qué postre vegano tenéis?' } });
+describe('restaurant images', () => {
+  it('renders a dish attachment returned by the verified transport', async () => {
+    vi.mocked(generateReply).mockImplementationOnce(async (_messages, _locale, _signal, _progress, _thinking, onImages) => {
+      onImages?.([{ id: 'edamame', nombre: 'Edamame', src: '/restaurantes/ko/images/edamame.webp', alt: 'Cuenco de edamame' }]);
+      return 'Aquí tienes Edamame.';
+    });
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Enséñame el edamame' } });
     fireEvent.click(screen.getByRole('button', { name: 'Enviar mensaje' }));
+    const photo = await screen.findByRole('img', { name: 'Cuenco de edamame' });
+    expect(photo.getAttribute('src')).toBe('/restaurantes/ko/images/edamame.webp');
+    expect(photo.closest('a')?.getAttribute('href')).toBe('/restaurantes/ko/#edamame');
+    expect(screen.queryByRole('button', { name: 'Razonar más' })).toBeNull();
     await waitFor(() => expect(generateReply).toHaveBeenCalledOnce());
-    expect(vi.mocked(generateReply).mock.calls[0][4]).toBe(true);
   });
 });

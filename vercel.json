@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/chat.ts": {
-      "includeFiles": "public/menu/**",
+      "includeFiles": "public/**",
       "maxDuration": 30
     }
   },
@@ -38,9 +38,33 @@
       "source": "/app/:path*/",
       "destination": "/chatbot/",
       "permanent": true
+    },
+    {
+      "source": "/chatbot",
+      "destination": "/restaurantes/",
+      "permanent": false
+    },
+    {
+      "source": "/chatbot/",
+      "destination": "/restaurantes/",
+      "permanent": false
+    },
+    {
+      "source": "/menu/:path*",
+      "destination": "/restaurantes/",
+      "permanent": false
     }
   ],
   "headers": [
+    {
+      "source": "/restaurantes/:slug/menu.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
     {
       "source": "/assets/(.*)",
       "headers": [

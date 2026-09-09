@@ -3,12 +3,12 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
     plugins: [react()],
-    base: './',
+    base: '/',
     build: {
         outDir: process.env.APPDEPLOY_VITE_OUT_DIR || 'dist',
-        sourcemap: process.env.APPDEPLOY_VITE_SOURCEMAP === 'hidden' ? 'hidden' : false,
+        sourcemap: false,
         rollupOptions: {
-            input: ['index.html', 'chatbot/index.html', 'settings/index.html', '404.html'],
+            input: ['index.html', 'chatbot/index.html', 'settings/index.html', '404.html', 'restaurantes/index.html', 'restaurantes/ko/index.html', 'restaurantes/vita/index.html', 'restaurantes/ko/platefy/index.html', 'restaurantes/vita/platefy/index.html'],
             maxParallelFileOps: 128,
         },
     },

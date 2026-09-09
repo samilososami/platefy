@@ -4,11 +4,10 @@ import type { Locale } from './content';
 
 export type OrbState = 'idle' | 'appearing' | 'listening' | 'thinking' | 'speaking' | 'success' | 'error';
 export function assetUrl(path: string) {
-  const base = location.pathname.replace(/\/chatbot(?:\/(?:index\.html)?)?$/, '/').replace(/\/index\.html$/, '/');
-  return new URL(`${base.endsWith('/') ? base : `${base}/`}${path}`, location.origin).href;
+  return new URL(`/${path.replace(/^\/+/, '')}`, location.origin).href;
 }
-export function Brand({ href = './' }: { href?: string }) {
-  return <a className="brand" href={href} aria-label="Platefy"><span>platefy</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19" /></svg></a>;
+export function Brand({ href = '/' }: { href?: string }) {
+  return <a className="brand" href={href} aria-label="platefy"><span>platefy</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M7 20.3 2.8 21.2l.9-4.2A9.5 9.5 0 1 1 7 20.3Z" /><path d="M8.2 15.8a5.4 5.4 0 1 1 7.6 0" /></svg></a>;
 }
 export function LanguageSelect({ locale, onChange }: { locale: Locale; onChange: (locale: Locale) => void }) {
   const label = locale === 'en' ? 'Language' : 'Idioma';

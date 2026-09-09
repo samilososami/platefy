@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest'
-import menuData from '../public/menu/MENU.json'
-import { filterMenu, type RestaurantMenu } from '../src/services/restaurant'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import menuData from './fixtures/menu.json'
+import { filterMenu, getRestaurantSlug, loadRestaurantKnowledge, safeDishImage, type RestaurantMenu } from '../src/services/restaurant'
 
 const menu = menuData as RestaurantMenu
+afterEach(() => vi.unstubAllGlobals())
 
 describe('deterministic menu grounding', () => {
   it('crosses allergens, meat and a strict budget before calling the model', () => {
@@ -49,5 +50,45 @@ describe('deterministic menu grounding', () => {
   it('applies Catalan diet and category constraints', () => {
     const result = filterMenu(menu, 'Quins postres vegans teniu?')
     expect(result.dishes.map(dish => dish.id)).toEqual(['panna-cotta-coco', 'sorbete-limon'])
+  })
+})
+
+describe('restaurant knowledge and photographs', () => {
+  it('only accepts known restaurant slugs in the URL', () => {
+    expect(getRestaurantSlug('/restaurantes/vita/platefy')).toBe('vita')
+    expect(getRestaurantSlug('/restaurantes/ko/platefy/')).toBe('ko')
+    expect(getRestaurantSlug('/restaurantes/vital/platefy')).toBe('ko')
+  })
+
+  it.each([
+    'https://example.com/photo.webp', '//example.com/photo.webp',
+    '/restaurantes/vita/images/dish.webp', '/restaurantes/ko/../vita/images/dish.webp',
+    '/restaurantes/ko/images/%2e%2e/vita.webp', '/restaurantes/ko/images/dish.svg',
+    '/restaurantes/ko/images/dish.webp?redirect=https://example.com',
+  ])('rejects an untrusted photo path: %s', imagen => {
+    expect(safeDishImage({ id: 'dish', nombre: 'Dish', imagen }, 'ko')).toBeNull()
+  })
+
+  it('keeps each restaurant cached separately and refreshes it on a new opening', async () => {
+    const fetchMock = vi.fn(async (input: string, _init?: RequestInit) => input === '/platefy.md'
+      ? new Response('Soy platefy.')
+      : new Response(JSON.stringify({ ...menu, restaurante: { ...menu.restaurante, slug: input.includes('/vita/') ? 'vita' : 'ko' } })))
+    vi.stubGlobal('fetch', fetchMock)
+    const firstKo = await loadRestaurantKnowledge(true, 'ko')
+    const firstVita = await loadRestaurantKnowledge(true, 'vita')
+    expect(firstKo.menu.restaurante.slug).toBe('ko')
+    expect(firstVita.menu.restaurante.slug).toBe('vita')
+    expect(await loadRestaurantKnowledge(false, 'ko')).toBe(firstKo)
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    expect(await loadRestaurantKnowledge(true, 'ko')).not.toBe(firstKo)
+    expect(fetchMock).toHaveBeenCalledTimes(6)
+    expect(fetchMock.mock.calls.every(call => (call[1] as RequestInit)?.cache === 'no-cache')).toBe(true)
+  })
+
+  it('rejects a mismatched menu response', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: string, _init?: RequestInit) => input === '/platefy.md'
+      ? new Response('Soy platefy.')
+      : new Response(JSON.stringify({ ...menu, restaurante: { ...menu.restaurante, slug: 'ko' } }))))
+    await expect(loadRestaurantKnowledge(true, 'vita')).rejects.toThrow('KNOWLEDGE_INVALID')
   })
 })

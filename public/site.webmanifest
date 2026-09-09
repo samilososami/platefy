@@ -1,6 +1,6 @@
 {
-  "name": "Platefy",
-  "short_name": "Platefy",
+  "name": "platefy",
+  "short_name": "platefy",
   "description": "Asistente conversacional para restaurantes.",
   "start_url": "/",
   "display": "standalone",

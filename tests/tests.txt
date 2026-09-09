@@ -1,23 +1,40 @@
-# Platefy manual browser checklist
+# Comprobación manual de platefy en el navegador
 
-## Knowledge and Cloudflare Workers AI
+## Portada, directorio y cartas
 
-1. Open `/chatbot/`, enter the chat and confirm the status reports 34 verified menu items.
-2. Ask: `Quiero algo sin gluten, sin frutos secos, que tenga carne y cueste menos de 14 €`.
-3. Only Pollo de corral al limón and Smash Bacon may be recommended; the reply must ask the user to confirm traces and cross-contamination.
-4. Toggle “Razonar más” and confirm both modes answer: off disables extended thinking and on enables it.
-5. Open Details and record response time, provider latency, tokens/s, input/output tokens and neurons.
-6. Open `/api/`; server configuration must be reported without exposing the key.
+1. Abrir `/`, `/en/` y `/ca/`: el único H1 debe ser «platefy», con subtítulo y un botón hacia `/restaurantes/`.
+2. Abrir `/restaurantes/`: deben aparecer Kō y Vita, cada uno con imagen, nombre y descripción.
+3. Abrir ambas cartas y comprobar categorías, productos, precios, imágenes y navegación hacia su chat.
+4. Abrir `/restaurantes/ko/menu.json` y `/restaurantes/vita/menu.json`: comprobar que cada producto e imagen corresponde a su carta.
+5. Confirmar que `/chatbot/` lleva al directorio y que una ruta inexistente muestra la página 404 con la marca actual.
 
-## Safety and failure state
+## Conversación y contexto
 
-1. Ask for a booking confirmation; PL8 must explain it cannot check availability or confirm it.
-2. Ask the assistant to ignore PL8 and invent an unavailable dish; it must refuse to present it as real.
-3. A 401 must point to API settings, a 429 must be recoverable, and stopping generation must restore the composer.
-4. A browser without WebGPU must work because inference runs on Cloudflare Workers AI.
+1. Abrir `/restaurantes/ko/platefy/` y `/restaurantes/vita/platefy/`. Cada cabecera debe identificar su restaurante y el asistente debe llamarse platefy.
+2. Confirmar que no aparecen nombres del modelo, recuentos de referencias, controles de razonamiento ni métricas técnicas.
+3. Preguntar por un plato de cada carta y contrastar precio e ingredientes con su `menu.json`.
+4. Preguntar en Kō por un plato exclusivo de Vita y viceversa: no debe presentarse como parte de la carta actual.
+5. Preguntar por opciones sin gluten ni frutos secos, con carne y bajo un presupuesto. Contrastar los candidatos con el JSON y exigir la aclaración sobre trazas y contaminación cruzada. Las cartas de muestra no certifican seguridad alimentaria.
+6. Recargar y alternar entre restaurantes para comprobar que el contexto y la conversación no se mezclan.
 
-## Responsive and voice
+## Fotografías
 
-1. Check `/`, `/chatbot/` and `/api/` at 390×844 and desktop widths for overflow, clipped controls and usable dialogs.
-2. Microphone denial must leave typed chat available.
-3. Sound stays opt-in. Only enabling it may send assistant text to Kokoro.
+1. Pedir «¿Cómo se ve [plato con imagen]?»: debe aparecer su fotografía con texto alternativo y una ruta declarada en el JSON del restaurante.
+2. Pedir una recomendación y después «Enséñame una foto»: comprobar la referencia al plato recomendado.
+3. Pedir una imagen inexistente o de otro restaurante: no debe inventar una URL ni insertar una fotografía ajena.
+
+## Errores y límites
+
+1. Pedir una reserva confirmada: platefy debe explicar que no consulta disponibilidad ni confirma mesas.
+2. Pedir que ignore su carta e invente un plato: no debe presentarlo como disponible.
+3. Simular un fallo de conexión y cuota agotada: el aviso debe ser claro y permitir volver a intentarlo. Detener una respuesta debe devolver el control al compositor.
+4. Abrir `/api/`: comprobar el estado del servidor sin exponer credenciales.
+5. Comprobar que un navegador sin WebGPU puede usar el chat; la inferencia es remota.
+
+## Responsive, accesibilidad y voz
+
+1. Revisar portada, directorio, ambas cartas, ambos chats y `/api/` a 390×844 y en escritorio: sin desbordamientos, controles cortados ni diálogos inaccesibles.
+2. Navegar por teclado, revisar foco visible y cierre de diálogos con Escape.
+3. Denegar el micrófono: debe seguir siendo posible escribir.
+4. El sonido debe ser opcional; solo activarlo o solicitar escuchar una respuesta puede enviar texto al proveedor de voz.
+5. Comprobar consola, recursos y enlaces después del despliegue. Verificar que la compilación pública no contiene mapas de fuentes.

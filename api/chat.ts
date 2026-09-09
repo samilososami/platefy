@@ -1,78 +1,58 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { ALLERGEN_IDS, excludedAllergens, filterMenu, getGroundedContext, isRestaurantSlug, safeDishImage, type RestaurantSlug, type RestaurantMenu, type MenuFilterResult, type DishImage, type MenuDish } from '../src/services/restaurant.js'
+
+export { filterMenu } from '../src/services/restaurant.js'
 
 type Request = IncomingMessage & { body?: unknown }
 type Response = ServerResponse & { status(code: number): Response; json(value: unknown): void }
 type Message = { role: 'user' | 'assistant'; content: string }
-type Dish = { id: string; nombre: string; categoria: string; precio: number; descripcion: string; ingredientes: string[]; alergenos: string[]; dietas: string[]; picante: number; disponible: boolean }
-type Menu = { restaurante: { nombre: string; ficticio: boolean; tipo_cocina: string[]; moneda: string; horarios_cocina: unknown; direccion: string | null; telefono: string | null; reservas_en_tiempo_real: boolean; aviso_alergenos: string }; platos: Dish[] }
-type FilterResult = { dishes: Dish[]; isSafetyQuestion: boolean; applied: string[] }
 type CloudflareResult = { content?: string; usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; neurons?: number }; model?: string; error?: string; detail?: string }
 
 const MODEL = '@cf/qwen/qwen3-30b-a3b-fp8'
 const windows = new Map<string, { started: number; count: number }>()
-const allergenTerms: Record<string, string[]> = {
-  gluten: ['gluten', 'celiac', 'trigo', 'wheat'],
-  frutos_de_cascara: ['frutos secos', 'frutos de cascara', 'nueces', 'nuez', 'almendra', 'avellana', 'tree nuts', 'nuts', 'fruita seca'],
-  cacahuetes: ['cacahuete', 'mani', 'peanut'], leche: ['leche', 'lactosa', 'lacteo', 'milk', 'lactose', 'llet'],
-  huevo: ['huevo', 'egg', 'ou'], pescado: ['pescado', 'fish', 'peix'], crustaceos: ['marisco', 'crustaceo', 'gamba', 'langostino', 'shellfish'],
-  moluscos: ['molusco', 'calamar', 'sepia', 'mollusc'], soja: ['soja', 'soy'], sesamo: ['sesamo', 'sesame'],
-  mostaza: ['mostaza', 'mustard'], sulfitos: ['sulfito', 'sulphite'], apio: ['apio', 'celery'],
-}
-
 function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() }
 function locale(value: unknown) { const code = typeof value === 'string' ? value.toLowerCase().split('-')[0] : 'es'; return code === 'en' || code === 'ca' ? code : 'es' }
-function compact(dish: Dish) { return { id: dish.id, nombre: dish.nombre, categoria: dish.categoria, precio: dish.precio, descripcion: dish.descripcion, ingredientes: dish.ingredientes, alergenos: dish.alergenos, dietas: dish.dietas, picante: dish.picante } }
-function lean(dish: Dish) { return { id: dish.id, nombre: dish.nombre, categoria: dish.categoria, precio: dish.precio, alergenos: dish.alergenos, dietas: dish.dietas } }
 
-export function filterMenu(menu: Menu, rawQuestion: string): FilterResult {
-  const question = normalize(rawQuestion)
-  const applied: string[] = []
-  const safety = /alerg|intoler|celiac|celiaq|traza|trace|contaminacion|cross.?contamination|gluten.?free|nut.?free|dairy.?free|(?:sin|without|sense)\s/.test(question)
-  const excluded = Object.entries(allergenTerms).filter(([, terms]) => terms.some(term => question.includes(term)) && safety).map(([name]) => name)
-  if (excluded.includes('frutos_de_cascara') && !excluded.includes('cacahuetes')) excluded.push('cacahuetes')
-  if (excluded.length) applied.push(`excluir_alergenos:${excluded.join(',')}`)
-  const vegan = /\bvegan[oa]?s?\b|\bvega\b/.test(question)
-  const vegetarian = /\bvegetarian[oa]?s?\b|\bvegetaria\b/.test(question)
-  const meat = /\b(con|tenga|quiero|apetece|lleve)\s+(algo\s+de\s+)?carne\b|\bcarnivor|\bwith meat\b|\bmeat dish\b|\bamb carn\b/.test(question)
-  if (vegan) applied.push('dieta:vegano'); else if (vegetarian) applied.push('dieta:vegetariano')
-  if (meat) applied.push('dieta:carne')
-  const budgetMatch = question.match(/(?:menos de|menys de|under|less than|hasta|maximo|maximum|max|presupuesto(?: de)?|budget(?: of)?|<)\s*(\d+(?:[.,]\d+)?)/)
-  const budget = budgetMatch ? Number(budgetMatch[1].replace(',', '.')) : null
-  if (budget !== null && Number.isFinite(budget)) applied.push(`precio_maximo:${budget}`)
-  const aliases: Record<string, string[]> = { entrante: ['entrante', 'starter', 'appetizer'], principal: ['principal', 'plato', 'main'], postre: ['postre', 'dessert'], bebida: ['bebida', 'drink'] }
-  const category = Object.keys(aliases).find(value => aliases[value].some(term => question.includes(term)))
-  if (category) applied.push(`categoria:${category}`)
-  const named = menu.platos.filter(dish => { const name = normalize(dish.nombre); return name.length > 4 && (question.includes(name) || name.split(/\s+/).filter(word => word.length > 5).some(word => question.includes(word))) })
-  let dishes = menu.platos.filter(dish => dish.disponible)
-  if (excluded.length) dishes = dishes.filter(dish => !excluded.some(allergen => dish.alergenos.includes(allergen)))
-  if (vegan) dishes = dishes.filter(dish => dish.dietas.includes('vegano')); else if (vegetarian) dishes = dishes.filter(dish => dish.dietas.includes('vegetariano'))
-  if (meat) dishes = dishes.filter(dish => dish.dietas.includes('carne'))
-  if (budget !== null && Number.isFinite(budget)) dishes = dishes.filter(dish => dish.precio < budget)
-  if (category) dishes = dishes.filter(dish => dish.categoria === category)
-  if (!applied.length && named.length) dishes = named
-  if (!applied.length && !named.length) {
-    const words = question.split(/[^a-z0-9]+/).filter(word => word.length >= 5)
-    const relevant = dishes.filter(dish => { const text = normalize([dish.nombre, dish.descripcion, ...dish.ingredientes].join(' ')); return words.some(word => text.includes(word)) })
-    if (relevant.length) dishes = relevant
-  }
-  return { dishes: dishes.slice(0, applied.length ? 14 : 34), isSafetyQuestion: safety, applied }
+function priorUserQuestions(messages: Message[], allergies: string[] = []) {
+  return [...messages.slice(0, -1).filter(message => message.role === 'user').map(message => message.content),
+    ...(allergies.length ? [`sin ${allergies.map(value => value.replace(/_/g, ' ')).join(' y ')}`] : [])]
 }
 
-function groundedContext(identity: string, menu: Menu, question: string) {
-  const filter = filterMenu(menu, question)
-  const restaurant = menu.restaurante
-  const candidates = filter.dishes.length > 14 ? filter.dishes.map(lean) : filter.dishes.map(compact)
-  const system = [identity, 'DATOS_DEL_RESTAURANTE (fuente: MENU.json):', JSON.stringify({
-    nombre: restaurant.nombre, ficticio: restaurant.ficticio, cocina: restaurant.tipo_cocina, moneda: restaurant.moneda,
-    horarios_cocina: restaurant.horarios_cocina, direccion: restaurant.direccion, telefono: restaurant.telefono,
-    reservas_en_tiempo_real: restaurant.reservas_en_tiempo_real, aviso_alergenos: restaurant.aviso_alergenos,
-  }), `FILTRO_DETERMINISTA: ${JSON.stringify({ aplicado: filter.applied, consulta_sensible: filter.isSafetyQuestion, coincidencias: filter.dishes.length })}`,
-  'CANDIDATOS_VERIFICADOS (fuente: MENU.json):', JSON.stringify(candidates),
-  filter.applied.length ? 'La selección anterior ya aplica las restricciones detectadas. Recomienda únicamente esos candidatos; si está vacía, indica que no hay coincidencias.'
-    : 'Responde solo con los datos anteriores. Si la pregunta no trata sobre la carta, usa únicamente DATOS_DEL_RESTAURANTE.'].join('\n\n')
-  return { system, filter }
+type ImageSelection = { images: DishImage[]; missing: MenuDish[]; blocked: MenuDish[]; exclusions: string[]; filter: MenuFilterResult }
+/** Photos come from menu records, never from model-generated URLs. */
+function imageSelection(menu: RestaurantMenu, messages: Message[], slug: RestaurantSlug, allergies: string[] = []): ImageSelection | null {
+  const question = normalize(messages[messages.length - 1].content)
+  if (!/\bfoto|\bimagen|como (?:se ve|luce)|\b(?:photo|picture|image|look like)|com (?:es veu|son)|\bmostra.?m|\bensena/.test(question)) return null
+  const prior = priorUserQuestions(messages, allergies)
+  const filter = filterMenu(menu, question, prior)
+  const allowed = new Set(filter.dishes.map(dish => dish.id))
+  const exclusions = [...new Set([...prior.flatMap(excludedAllergens), ...excludedAllergens(question)])]
+  const previous = messages.slice(0, -1).reverse().find(message => message.role === 'assistant')?.content || ''
+  const available = menu.platos.filter(dish => dish.disponible)
+  const directNames = available.filter(dish => question.includes(normalize(dish.nombre)))
+  const terms = question.split(/[^a-z0-9]+/).filter(word => word.length >= 4 && !['como', 'foto', 'fotos', 'imagen', 'imagenes', 'quiero', 'tienes', 'tenemos', 'puedes', 'muestra', 'muestrame', 'ensenar', 'ensena', 'ensename', 'verlas', 'verlos', 'carta', 'menu', 'plato', 'platos', 'photo', 'photos', 'picture', 'pictures', 'image', 'images', 'show', 'looks', 'like', 'please', 'would', 'could', 'algo', 'hasta', 'menos', 'euros', 'alergico', 'alergica'].includes(word)
+    && !excludedAllergens(`sin ${word}`).some(allergen => exclusions.includes(allergen)))
+  const named = directNames.length ? directNames : available.filter(dish => terms.some(term => normalize([dish.nombre, ...dish.ingredientes].join(' ')).includes(term)))
+  const referenced = named.length ? named : terms.length ? [] : available.filter(dish => normalize(previous).includes(normalize(dish.nombre)))
+  const requested = referenced.length ? referenced : !terms.length && filter.applied.length ? filter.dishes : []
+  const compatible = requested.filter(dish => allowed.has(dish.id))
+  return {
+    images: compatible.map(dish => safeDishImage(dish, slug)).filter((image): image is DishImage => image !== null).slice(0, 3),
+    missing: compatible.filter(dish => !safeDishImage(dish, slug)).slice(0, 3),
+    blocked: requested.filter(dish => !allowed.has(dish.id)).slice(0, 3), exclusions, filter,
+  }
+}
+export function menuImages(menu: RestaurantMenu, messages: Message[], slug: RestaurantSlug): DishImage[] | null {
+  return imageSelection(menu, messages, slug)?.images ?? null
+}
+
+function streamAnswer(response: Response, answer: string, images: DishImage[] = [], result?: CloudflareResult, providerMs?: number) {
+  response.statusCode = 200; response.setHeader('Content-Type', 'text/event-stream; charset=utf-8'); response.setHeader('X-Accel-Buffering', 'no')
+  for (const content of answer.match(/[\s\S]{1,180}/g) || [answer]) response.write(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
+  response.write(`data: ${JSON.stringify({ choices: [{ delta: {} }], platefy_images: images, usage: result?.usage, platefy_metrics: { provider_first_token_ms: providerMs ?? null, neurons: result?.usage?.neurons ?? null } })}\n\n`)
+  return response.end('data: [DONE]\n\n')
 }
 
 function clientIp(request: Request) { const value = request.headers['x-forwarded-for']; return (Array.isArray(value) ? value[0] : value?.split(',')[0])?.trim() || request.socket.remoteAddress || 'unknown' }
@@ -86,9 +66,11 @@ function readBody(request: Request): Promise<unknown> {
   if (request.body !== undefined) return Promise.resolve(request.body)
   return new Promise((resolve, reject) => { let raw = ''; request.setEncoding('utf8'); request.on('data', chunk => { raw += chunk; if (raw.length > 32_000) reject(new Error('PAYLOAD_TOO_LARGE')) }); request.on('end', () => { try { resolve(JSON.parse(raw)) } catch { reject(new Error('INVALID_JSON')) } }); request.on('error', reject) })
 }
-function sanitize(value: unknown): { messages: Message[]; locale: string; thinking: boolean } {
+function sanitize(value: unknown): { messages: Message[]; locale: string; restaurant: RestaurantSlug; allergies: string[] } {
   if (!value || typeof value !== 'object') throw new Error('INVALID_PAYLOAD')
-  const body = value as { messages?: unknown; locale?: unknown; thinking?: unknown }
+  const body = value as { messages?: unknown; locale?: unknown; restaurant?: unknown; allergies?: unknown }
+  if (!isRestaurantSlug(body.restaurant)) throw new Error('INVALID_RESTAURANT')
+  if (body.allergies !== undefined && (!Array.isArray(body.allergies) || body.allergies.length > ALLERGEN_IDS.length || body.allergies.some(value => typeof value !== 'string' || !ALLERGEN_IDS.includes(value)))) throw new Error('INVALID_PAYLOAD')
   if (!Array.isArray(body.messages) || body.messages.length < 1 || body.messages.length > 7) throw new Error('INVALID_MESSAGES')
   const messages = body.messages.map(message => {
     if (!message || typeof message !== 'object') throw new Error('INVALID_MESSAGE')
@@ -98,26 +80,34 @@ function sanitize(value: unknown): { messages: Message[]; locale: string; thinki
     return { role: candidate.role as Message['role'], content }
   })
   if (messages[messages.length - 1].role !== 'user') throw new Error('INVALID_MESSAGES')
-  return { messages, locale: locale(body.locale), thinking: body.thinking === true }
+  return { messages, locale: locale(body.locale), restaurant: body.restaurant, allergies: (body.allergies || []) as string[] }
 }
-function sources() {
-  const directory = path.join(process.cwd(), 'public/menu')
-  return { identity: readFileSync(path.join(directory, 'PL8.md'), 'utf8').trim(), menu: JSON.parse(readFileSync(path.join(directory, 'MENU.json'), 'utf8')) as Menu }
+function sources(slug: RestaurantSlug) {
+  // The allowlist is checked before constructing a path; client content never becomes a knowledge file.
+  const directory = path.join(process.cwd(), 'public')
+  const identity = readFileSync(path.join(directory, 'platefy.md'), 'utf8').trim()
+  const menu = JSON.parse(readFileSync(path.join(directory, 'restaurantes', slug, 'menu.json'), 'utf8')) as RestaurantMenu
+  if (!identity || menu.restaurante?.slug !== slug || !Array.isArray(menu.platos)) throw new Error('KNOWLEDGE_INVALID')
+  return { identity, menu }
 }
-function validateAnswer(answer: string, filter: FilterResult, menu: Menu, language: string) {
-  const clean = answer.replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '').replace(/<think(?:ing)?>[\s\S]*$/gi, '').trim()
+function validateAnswer(answer: string, filter: MenuFilterResult, menu: RestaurantMenu, language: string) {
+  const clean = answer.replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '').replace(/<think(?:ing)?>[\s\S]*$/gi, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim()
   if (!clean || clean.length > 12_000) throw new Error('INVALID_MODEL_RESPONSE')
   if (filter.applied.length) {
     const allowed = new Set(filter.dishes.map(dish => dish.id)); const output = normalize(clean)
     if (menu.platos.some(dish => output.includes(normalize(dish.nombre)) && !allowed.has(dish.id))) throw new Error('UNGROUNDED_DISH')
   }
-  if (!filter.isSafetyQuestion || /traza|contamin|personal|equipo|restaurant|seguridad|confirm|trace|staff|safety/i.test(clean)) return clean
-  return clean + (language === 'en' ? '\n\nPlease confirm traces, cross-contamination and safety with the restaurant team.' : language === 'ca' ? '\n\nConfirma les traces, la contaminació creuada i la seguretat amb l’equip del restaurant.' : '\n\nConfirma las trazas, la contaminación cruzada y la seguridad con el equipo del restaurante.')
+  return ensureAllergyNotice(clean, filter, language)
 }
+function ensureAllergyNotice(answer: string, filter: MenuFilterResult, language: string) {
+  if (!filter.isSafetyQuestion || /(?:confirm|consulta|check)[\s\S]{0,100}(?:personal|equipo|restaurant|staff|team)/i.test(answer)) return answer
+  return answer + (language === 'en' ? '\n\nPlease confirm ingredients, traces and cross-contamination with the restaurant team.' : language === 'ca' ? '\n\nConfirma els ingredients, les traces i la contaminació creuada amb l’equip del restaurant.' : '\n\nConfirma los ingredientes, las trazas y la contaminación cruzada con el equipo del restaurante.')
+}
+
 function upstreamError(status: number, detail = '') {
-  if (status === 401 || status === 403) return { status: 503, message: 'Cloudflare authentication failed.', reason: 'authentication' }
-  if (status === 429 || /neuron|quota|limit/i.test(detail)) return { status: 429, message: 'Cloudflare Workers AI has reached its available quota.', reason: 'quota_unavailable' }
-  return { status: 503, message: 'Cloudflare Workers AI is temporarily unavailable.', reason: 'provider' }
+  if (status === 401 || status === 403) return { status: 503, message: 'The assistant connection requires attention.', reason: 'authentication' }
+  if (status === 429 || /neuron|quota|limit/i.test(detail)) return { status: 429, message: 'The assistant has reached its available quota.', reason: 'quota_unavailable' }
+  return { status: 503, message: 'The assistant is temporarily unavailable.', reason: 'provider' }
 }
 
 export default async function handler(request: Request, response: Response) {
@@ -128,35 +118,60 @@ export default async function handler(request: Request, response: Response) {
   let timeout: ReturnType<typeof setTimeout> | undefined
   try {
     const payload = sanitize(await readBody(request))
+    const knowledge = sources(payload.restaurant)
+    const question = payload.messages[payload.messages.length - 1].content
+    const photos = imageSelection(knowledge.menu, payload.messages, payload.restaurant, payload.allergies)
+    if (photos !== null) {
+      const images = photos.images
+      const names = images.map(image => image.nombre).join(', ')
+      let answer = images.length
+        ? payload.locale === 'en' ? `Here ${images.length === 1 ? 'is' : 'are'} ${names}.` : payload.locale === 'ca' ? `Aquí tens ${names}.` : `Aquí tienes ${names}.`
+        : payload.locale === 'en' ? 'Which dish would you like to see? Tell me its name and I’ll check whether its photo is available on this menu.' : payload.locale === 'ca' ? 'Quin plat t’agradaria veure? Digues-me el nom i comprovaré si té fotografia en aquesta carta.' : '¿Qué plato te gustaría ver? Dime su nombre y comprobaré si tiene fotografía en esta carta.'
+      if (photos.blocked.length) {
+        const labels: Record<string, string> = { frutos_de_cascara: 'frutos de cáscara', leche: 'leche', huevo: 'huevo', pescado: 'pescado', crustaceos: 'crustáceos', moluscos: 'moluscos', sesamo: 'sésamo', altramuces: 'altramuces' }
+        const reasons = photos.blocked.map(dish => {
+          const allergens = dish.alergenos.filter(value => photos.exclusions.includes(value)).map(value => labels[value] || value)
+          return allergens.length ? `${dish.nombre} (${allergens.join(', ')})` : dish.nombre
+        }).join('; ')
+        const warning = payload.locale === 'en' ? `I cannot present these dishes as compatible with your restrictions: ${reasons}.` : payload.locale === 'ca' ? `No et presento aquests plats com a compatibles amb les teves restriccions: ${reasons}.` : `No te presento estos platos como compatibles con tus restricciones: ${reasons}.`
+        answer = images.length ? answer + '\n\n' + warning : warning
+      } else if (!images.length && photos.missing.length) {
+        const missing = photos.missing.map(dish => dish.nombre).join(', ')
+        answer = payload.locale === 'en' ? `We don't have a photo of ${missing} yet.` : payload.locale === 'ca' ? `Encara no tenim fotografia de ${missing}.` : `Todavía no tenemos fotografía de ${missing}.`
+      }
+      if (images.length && /precio|cuanto|cuesta|cost|price|lleva|ingrediente|porta/.test(normalize(question))) {
+        const money = new Intl.NumberFormat(payload.locale, { style: 'currency', currency: knowledge.menu.restaurante.moneda })
+        answer += '\n\n' + images.map(image => {
+          const dish = knowledge.menu.platos.find(candidate => candidate.id === image.id)!
+          return `${dish.nombre} · ${money.format(dish.precio)}. ${dish.descripcion}`
+        }).join('\n\n')
+      }
+      return streamAnswer(response, ensureAllergyNotice(answer, photos.filter, payload.locale), images)
+    }
     const workerUrl = process.env.CLOUDFLARE_WORKER_URL
     const workerSecret = process.env.CLOUDFLARE_WORKER_SECRET
-    if (!workerUrl || !workerSecret) return response.status(503).json({ error: 'Cloudflare Workers AI is not configured.' })
-    const knowledge = sources()
-    const question = payload.messages[payload.messages.length - 1].content
-    const grounded = groundedContext(knowledge.identity, knowledge.menu, question)
+    if (!workerUrl || !workerSecret) return response.status(503).json({ error: 'The assistant connection is not configured.' })
+    const grounded = getGroundedContext(knowledge, question, priorUserQuestions(payload.messages, payload.allergies))
     const controller = new AbortController(); timeout = setTimeout(() => controller.abort(), 25_000)
     request.once('close', () => { if (!request.complete) controller.abort() })
     const upstreamStarted = performance.now()
     const upstream = await fetch(workerUrl, {
       method: 'POST', signal: controller.signal,
       headers: { Authorization: `Bearer ${workerSecret}`, 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...payload.messages.slice(0, -1), { role: 'user', content: question }], thinking: payload.thinking }),
+      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...payload.messages.slice(0, -1), { role: 'user', content: question }], thinking: false }),
     })
     if (!upstream.ok) { const error = upstreamError(upstream.status, await upstream.text()); return response.status(error.status).json({ error: error.message, reason: error.reason }) }
     const result = await upstream.json() as CloudflareResult
     const verified = validateAnswer(result.content || '', grounded.filter, knowledge.menu, payload.locale)
     const providerMs = performance.now() - upstreamStarted
-    response.statusCode = 200; response.setHeader('Content-Type', 'text/event-stream; charset=utf-8'); response.setHeader('X-Accel-Buffering', 'no')
-    for (const content of verified.match(/[\s\S]{1,180}/g) || [verified]) response.write(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
-    response.write(`data: ${JSON.stringify({ choices: [{ delta: {} }], usage: result.usage, platefy_metrics: { provider_first_token_ms: providerMs, neurons: result.usage?.neurons ?? null } })}\n\n`)
-    return response.end('data: [DONE]\n\n')
+    return streamAnswer(response, verified, [], result, providerMs)
   } catch (error) {
     if (response.headersSent) return response.end()
     const message = error instanceof Error ? error.message : ''
     if (message === 'PAYLOAD_TOO_LARGE') return response.status(413).json({ error: 'Request too large.' })
-    if (/INVALID_(JSON|PAYLOAD|MESSAGES?)/.test(message)) return response.status(400).json({ error: 'Invalid request.' })
+    if (/INVALID_(JSON|PAYLOAD|MESSAGES?|RESTAURANT)/.test(message)) return response.status(400).json({ error: 'Invalid request.' })
     if (message === 'UNGROUNDED_DISH' || message === 'INVALID_MODEL_RESPONSE') return response.status(422).json({ error: 'The answer did not pass menu verification.' })
-    if (error instanceof DOMException && error.name === 'AbortError') return response.status(504).json({ error: 'Cloudflare Workers AI timed out.' })
+    if (error instanceof DOMException && error.name === 'AbortError') return response.status(504).json({ error: 'The assistant took too long to respond.' })
     return response.status(500).json({ error: 'The request could not be completed.' })
   } finally { if (timeout) clearTimeout(timeout) }
 }

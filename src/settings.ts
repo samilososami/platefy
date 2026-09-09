@@ -17,8 +17,8 @@ async function checkServer() {
     const status = await response.json() as { configured?: boolean; model?: string; provider?: string }
     if (!response.ok) throw new Error()
     serverStatus.textContent = status.configured
-      ? `${status.provider || 'Cloudflare Workers AI'} conectado · ${status.model || 'Qwen3 30B-A3B'}`
-      : 'La conexión de Cloudflare todavía no está configurada en Vercel'
+      ? 'platefy está conectado'
+      : 'La conexión todavía no está configurada'
     document.querySelector('.api-status')?.classList.toggle('is-ready', Boolean(status.configured))
     return Boolean(status.configured)
   } catch {
@@ -29,17 +29,17 @@ async function checkServer() {
 
 testButton.addEventListener('click', async () => {
   testButton.disabled = true
-  setResult('Consultando la carta con Qwen3…', 'working')
+  setResult('Consultando la carta…', 'working')
   try {
     const response = await fetch('/api/chat', {
       method: 'POST', cache: 'no-store', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: '¿A qué hora sirve cenas el restaurante?' }], locale: 'es', thinking: false }),
+      body: JSON.stringify({ messages: [{ role: 'user', content: '¿A qué hora sirve cenas el restaurante?' }], locale: 'es', restaurant: 'ko' }),
     })
     if (!response.ok) throw new Error(String(response.status))
     const body = await response.text()
     if (!body.includes('data: [DONE]')) throw new Error('invalid')
-    setResult('Conexión verificada. Cloudflare Workers AI ha respondido correctamente.', 'success')
+    setResult('Conexión verificada. platefy ha respondido correctamente.', 'success')
   } catch {
     setResult('No se ha podido completar la prueba de conexión.', 'error')
   } finally { testButton.disabled = false }

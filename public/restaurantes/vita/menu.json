@@ -1,0 +1,647 @@
+{
+  "schema_version": "2.0",
+  "actualizado": "2026-09-09",
+  "restaurante": {
+    "nombre": "Vita",
+    "slug": "vita",
+    "descripcion": "Cocina vegetal, ingredientes frescos y platos llenos de color.",
+    "titular": "Comer bien, vivir mejor.",
+    "subtitulo": "Cocina vegetal. Fresca y de temporada.",
+    "hero": "/restaurantes/vita/images/buddha-bowl.webp",
+    "ficticio": true,
+    "tipo_cocina": [
+      "vegetal",
+      "mediterránea"
+    ],
+    "moneda": "EUR",
+    "precios_incluyen_iva": true,
+    "horarios_cocina": {
+      "comidas": "No facilitado",
+      "cenas": "No facilitado"
+    },
+    "direccion": null,
+    "telefono": null,
+    "reservas_en_tiempo_real": false,
+    "aviso_alergenos": "Carta de muestra: las recetas y los alérgenos son orientativos y no están verificados por una cocina. No garantizamos ausencia de trazas ni de contaminación cruzada. Si tienes alergias o intolerancias, confirma siempre los ingredientes y la preparación con el personal.",
+    "aviso_imagenes": "Las fotografías son ilustraciones generadas para esta carta de muestra; la presentación real puede variar."
+  },
+  "categorias": [
+    "entrante",
+    "principal",
+    "postre",
+    "bebida"
+  ],
+  "alergenos_controlados": [
+    "gluten",
+    "crustaceos",
+    "huevo",
+    "pescado",
+    "cacahuetes",
+    "soja",
+    "leche",
+    "frutos_de_cascara",
+    "apio",
+    "mostaza",
+    "sesamo",
+    "sulfitos",
+    "altramuces",
+    "moluscos"
+  ],
+  "origen_datos": {
+    "carta": "Nombres, categorías y precios transcritos del diseño facilitado en Figma.",
+    "recetas": "Ingredientes y alérgenos ampliados como recetas ficticias de demostración; no constituyen información alimentaria validada.",
+    "ubicacion": "La identidad visual menciona Tarragona; no se ha facilitado dirección, teléfono ni horario."
+  },
+  "platos": [
+    {
+      "id": "hummus-remolacha",
+      "nombre": "Hummus de remolacha",
+      "seccion": "Para compartir",
+      "categoria": "entrante",
+      "precio": 6.5,
+      "descripcion": "Hummus de remolacha con pan de pita y semillas.",
+      "ingredientes": [
+        "garbanzos",
+        "remolacha",
+        "tahini (sésamo)",
+        "zumo de limón",
+        "ajo",
+        "aceite de oliva",
+        "sal",
+        "pan de pita (harina de trigo, agua, levadura, sal)",
+        "sésamo"
+      ],
+      "alergenos": [
+        "sesamo",
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": "/restaurantes/vita/images/hummus-remolacha.webp",
+      "imagen_alt": "Hummus de remolacha de color magenta, con sésamo y pan de pita alrededor del cuenco; imagen ilustrativa.",
+      "imagen_generada": true
+    },
+    {
+      "id": "patatas-bravas",
+      "nombre": "Patatas bravas Vita",
+      "seccion": "Para compartir",
+      "categoria": "entrante",
+      "precio": 5.8,
+      "descripcion": "Patatas doradas con salsa brava y alioli vegano.",
+      "ingredientes": [
+        "patata",
+        "aceite de oliva",
+        "tomate",
+        "pimentón",
+        "guindilla",
+        "ajo",
+        "bebida de soja",
+        "limón",
+        "sal",
+        "perejil"
+      ],
+      "alergenos": [
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 1,
+      "disponible": true,
+      "imagen": "/restaurantes/vita/images/patatas-bravas.webp",
+      "imagen_alt": "Patatas bravas doradas con salsa roja y alioli vegetal blanco en un cuenco de cerámica; imagen ilustrativa.",
+      "imagen_generada": true
+    },
+    {
+      "id": "guacamole",
+      "nombre": "Guacamole casero",
+      "seccion": "Para compartir",
+      "categoria": "entrante",
+      "precio": 7,
+      "descripcion": "Aguacate, lima y tomate, acompañado de totopos.",
+      "ingredientes": [
+        "aguacate",
+        "lima",
+        "tomate",
+        "cebolla morada",
+        "cilantro",
+        "sal",
+        "totopos de maíz (maíz, aceite vegetal, sal)"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": "/restaurantes/vita/images/guacamole.webp",
+      "imagen_alt": "Guacamole de aguacate con tomate y cilantro, acompañado de totopos de maíz; imagen ilustrativa.",
+      "imagen_generada": true
+    },
+    {
+      "id": "croquetas-setas",
+      "nombre": "Croquetas de setas",
+      "seccion": "Para compartir",
+      "categoria": "entrante",
+      "precio": 6.9,
+      "descripcion": "Seis croquetas de setas con bechamel vegetal.",
+      "ingredientes": [
+        "setas",
+        "cebolla",
+        "harina de trigo",
+        "bebida de soja",
+        "pan rallado de trigo",
+        "aceite de oliva",
+        "nuez moscada",
+        "sal",
+        "perejil"
+      ],
+      "alergenos": [
+        "gluten",
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": "/restaurantes/vita/images/croquetas-setas.webp",
+      "imagen_alt": "Seis croquetas de setas de corteza dorada con perejil, sobre un plato de cerámica claro; imagen ilustrativa.",
+      "imagen_generada": true,
+      "porcion": "6 unidades"
+    },
+    {
+      "id": "ensalada-mediterranea",
+      "nombre": "Mediterránea",
+      "seccion": "Ensaladas",
+      "categoria": "principal",
+      "precio": 9.5,
+      "descripcion": "Mezclum, tomate, aceitunas, pepino, cebolla y tofu.",
+      "ingredientes": [
+        "mezclum de hojas",
+        "tomate",
+        "aceitunas",
+        "pepino",
+        "cebolla",
+        "tofu (soja)",
+        "aceite de oliva",
+        "limón",
+        "sal"
+      ],
+      "alergenos": [
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "buddha-bowl",
+      "nombre": "Buddha Bowl",
+      "seccion": "Ensaladas",
+      "categoria": "principal",
+      "precio": 11.5,
+      "descripcion": "Arroz integral, garbanzos, aguacate, zanahoria y hummus.",
+      "ingredientes": [
+        "arroz integral",
+        "garbanzos",
+        "aguacate",
+        "zanahoria",
+        "hojas verdes",
+        "col lombarda",
+        "tahini (sésamo)",
+        "zumo de limón",
+        "ajo",
+        "aceite de oliva",
+        "sal",
+        "sésamo"
+      ],
+      "alergenos": [
+        "sesamo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": "/restaurantes/vita/images/buddha-bowl.webp",
+      "imagen_alt": "Buddha Bowl con arroz integral, garbanzos, aguacate, zanahoria, hummus y hojas verdes en cerámica marrón; imagen ilustrativa.",
+      "imagen_generada": true
+    },
+    {
+      "id": "ensalada-verde",
+      "nombre": "Verde",
+      "seccion": "Ensaladas",
+      "categoria": "principal",
+      "precio": 9,
+      "descripcion": "Espinacas, manzana, nueces y aguacate con aliño de limón.",
+      "ingredientes": [
+        "espinacas",
+        "manzana",
+        "nueces",
+        "aguacate",
+        "limón",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [
+        "frutos_de_cascara"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "hamburguesa-vita",
+      "nombre": "Hamburguesa Vita",
+      "seccion": "Principales",
+      "categoria": "principal",
+      "precio": 12.9,
+      "descripcion": "Burger vegetal con queso vegano, tomate y cebolla, acompañada de patatas.",
+      "ingredientes": [
+        "pan de hamburguesa (harina de trigo, agua, levadura, aceite, sésamo)",
+        "proteína de guisante",
+        "setas",
+        "cebolla",
+        "queso vegano (aceite de coco, almidón de patata)",
+        "tomate",
+        "lechuga",
+        "patata",
+        "aceite vegetal",
+        "sal"
+      ],
+      "alergenos": [
+        "gluten",
+        "sesamo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "curry-verduras",
+      "nombre": "Curry de verduras",
+      "seccion": "Principales",
+      "categoria": "principal",
+      "precio": 11.5,
+      "descripcion": "Verduras al curry con leche de coco y arroz.",
+      "ingredientes": [
+        "calabacín",
+        "zanahoria",
+        "pimiento",
+        "cebolla",
+        "leche de coco",
+        "arroz",
+        "jengibre",
+        "ajo",
+        "cúrcuma",
+        "comino",
+        "cilantro",
+        "guindilla",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 1,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "lasana-verduras",
+      "nombre": "Lasaña de verduras",
+      "seccion": "Principales",
+      "categoria": "principal",
+      "precio": 12,
+      "descripcion": "Lasaña de berenjena, calabacín y tomate con bechamel vegetal.",
+      "ingredientes": [
+        "láminas de pasta de trigo sin huevo",
+        "berenjena",
+        "calabacín",
+        "tomate",
+        "cebolla",
+        "harina de trigo",
+        "bebida de soja",
+        "aceite de oliva",
+        "nuez moscada",
+        "sal"
+      ],
+      "alergenos": [
+        "gluten",
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "tacos-jackfruit",
+      "nombre": "Tacos de jackfruit",
+      "seccion": "Principales",
+      "categoria": "principal",
+      "precio": 10.5,
+      "descripcion": "Tres tacos de jackfruit con cebolla, cilantro y lima.",
+      "ingredientes": [
+        "tortillas de maíz",
+        "jackfruit",
+        "cebolla",
+        "cilantro",
+        "lima",
+        "tomate",
+        "pimentón",
+        "comino",
+        "aceite de oliva",
+        "sal"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false,
+      "porcion": "3 unidades"
+    },
+    {
+      "id": "brownie-vegano",
+      "nombre": "Brownie vegano",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 5.5,
+      "descripcion": "Brownie de chocolate con nueces.",
+      "ingredientes": [
+        "chocolate negro (cacao, azúcar, manteca de cacao)",
+        "harina de trigo",
+        "nueces",
+        "bebida de soja",
+        "azúcar",
+        "aceite vegetal",
+        "cacao",
+        "levadura química",
+        "sal"
+      ],
+      "alergenos": [
+        "gluten",
+        "frutos_de_cascara",
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "tarta-zanahoria",
+      "nombre": "Tarta de zanahoria",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 5.9,
+      "descripcion": "Bizcocho de zanahoria con crema vegetal.",
+      "ingredientes": [
+        "zanahoria",
+        "harina de trigo",
+        "azúcar",
+        "bebida de soja",
+        "aceite vegetal",
+        "canela",
+        "levadura química",
+        "crema vegetal de soja"
+      ],
+      "alergenos": [
+        "gluten",
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "fruta",
+      "nombre": "Fruta",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 4.5,
+      "descripcion": "Selección de fruta fresca de la carta de muestra.",
+      "ingredientes": [
+        "manzana",
+        "naranja",
+        "kiwi"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "agua",
+      "nombre": "Agua",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 2,
+      "descripcion": "Agua mineral.",
+      "ingredientes": [
+        "agua mineral"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "refrescos",
+      "nombre": "Refrescos",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 2.8,
+      "descripcion": "Refresco de la selección de muestra; consulta las variedades con el personal.",
+      "ingredientes": [
+        "agua carbonatada",
+        "azúcar",
+        "aromas alimentarios"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "zumo",
+      "nombre": "Zumo",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 3.5,
+      "descripcion": "Zumo de naranja.",
+      "ingredientes": [
+        "naranja"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "te-frio",
+      "nombre": "Té frío",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 3.8,
+      "descripcion": "Té frío con limón.",
+      "ingredientes": [
+        "agua",
+        "té negro",
+        "limón",
+        "azúcar"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "cerveza",
+      "nombre": "Cerveza",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 3.5,
+      "descripcion": "Cerveza de la selección de muestra. Contiene alcohol.",
+      "ingredientes": [
+        "agua",
+        "malta de cebada",
+        "lúpulo",
+        "levadura"
+      ],
+      "alergenos": [
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "copa-vino",
+      "nombre": "Copa de vino",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 4,
+      "descripcion": "Copa de vino de la selección de muestra. Contiene alcohol.",
+      "ingredientes": [
+        "uva",
+        "sulfitos"
+      ],
+      "alergenos": [
+        "sulfitos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false,
+      "porcion": "1 copa"
+    }
+  ]
+}

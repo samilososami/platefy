@@ -1,10 +1,11 @@
 import { callGradio, ProviderError, SseParser } from './gradio'
-import { loadRestaurantKnowledge, restaurantLocale } from './restaurant'
+import { excludedAllergens, getRestaurantSlug, loadRestaurantKnowledge, restaurantLocale, safeDishImage, type DishImage } from './restaurant'
+export type { DishImage } from './restaurant'
 
 export { ProviderError } from './gradio'
 export type { ProviderErrorCode } from './gradio'
 
-export interface ChatMessage { role: 'user' | 'assistant'; content: string }
+export interface ChatMessage { role: 'user' | 'assistant'; content: string; images?: DishImage[] }
 export type ModelPhase = 'idle' | 'loading-menu' | 'menu-ready' | 'connecting' | 'ready' | 'generating' | 'error'
 export interface ModelStatus { phase: ModelPhase; progress: number; text: string }
 export interface InferenceMetrics {
@@ -21,9 +22,9 @@ export interface InferenceMetrics {
 
 export const MODEL_INFO = {
   id: '@cf/qwen/qwen3-30b-a3b-fp8',
-  name: 'Qwen3 30B-A3B · Cloudflare',
+  name: 'platefy',
   page: 'https://developers.cloudflare.com/workers-ai/models/qwen3-30b-a3b-fp8/',
-  thinking: true,
+  thinking: false,
 } as const
 
 export const AI_PROVIDERS = {
@@ -45,10 +46,10 @@ export function subscribeModelStatus(listener: (next: ModelStatus) => void) { st
 export function subscribeInferenceMetrics(listener: (next: InferenceMetrics | null) => void) { metricsListeners.add(listener); return () => metricsListeners.delete(listener) }
 
 export async function prepareKnowledge() {
-  publishStatus({ phase: 'loading-menu', progress: 0, text: 'Cargando MENU.json y PL8.md' })
+  publishStatus({ phase: 'loading-menu', progress: 0, text: 'Abriendo la carta' })
   try {
-    const knowledge = await loadRestaurantKnowledge()
-    publishStatus({ phase: 'menu-ready', progress: 1, text: `${knowledge.menu.platos.length} referencias verificadas` })
+    const knowledge = await loadRestaurantKnowledge(true)
+    publishStatus({ phase: 'menu-ready', progress: 1, text: 'Aquí para ayudarte' })
     return knowledge
   } catch (error) {
     publishStatus({ phase: 'error', progress: 0, text: 'No se ha podido cargar la carta' })
@@ -69,23 +70,26 @@ function cleanPartialText(value: string) {
 type CloudflareChunk = {
   choices?: Array<{ delta?: { content?: string; reasoning?: string } }>
   usage?: { prompt_tokens?: number; completion_tokens?: number }
+  platefy_images?: DishImage[]
   platefy_metrics?: { provider_first_token_ms?: number | null; neurons?: number | null }
 }
 
 async function responseError(response: Response): Promise<ProviderError> {
   let reason = ''
   try { reason = String((await response.clone().json() as { reason?: unknown }).reason || '') } catch { /* Non-JSON provider error. */ }
-  if (response.status === 429) return new ProviderError(reason === 'quota_unavailable' ? 'QUOTA' : 'RATE_LIMIT', 'Cloudflare Workers AI quota reached.')
-  if (response.status === 401 || response.status === 403) return new ProviderError('AUTH', 'Cloudflare authentication failed.')
-  return new ProviderError('UNAVAILABLE', `Cloudflare Workers AI could not complete the request (${response.status}).`)
+  if (response.status === 429) return new ProviderError(reason === 'quota_unavailable' ? 'QUOTA' : 'RATE_LIMIT', 'Assistant quota reached.')
+  if (response.status === 401 || response.status === 403) return new ProviderError('AUTH', 'Assistant connection failed.')
+  return new ProviderError('UNAVAILABLE', `The assistant could not complete the request (${response.status}).`)
 }
 
-export async function generateReply(messages: ChatMessage[], locale: string, signal: AbortSignal, onProgress?: (text: string) => void, thinking = false): Promise<string> {
+export async function generateReply(messages: ChatMessage[], locale: string, signal: AbortSignal, onProgress?: (text: string) => void, _thinking = false, onImages?: (images: DishImage[]) => void): Promise<string> {
   if (!messages.length || messages[messages.length - 1].role !== 'user') throw new ProviderError('INVALID_RESPONSE', 'A user question is required.')
   const recent = messages.slice(-7).map(message => ({ role: message.role, content: message.content.trim().slice(0, 1600) }))
   if (!recent[recent.length - 1].content) throw new ProviderError('INVALID_RESPONSE', 'A user question is required.')
 
-  publishStatus({ phase: 'connecting', progress: 1, text: thinking ? 'Qwen está razonando' : 'Consultando a Qwen' })
+  publishStatus({ phase: 'connecting', progress: 1, text: 'Consultando la carta' })
+  const restaurant = getRestaurantSlug()
+  const allergies = [...new Set(messages.filter(message => message.role === 'user').flatMap(message => excludedAllergens(message.content)))]
   const startedAt = performance.now()
   let firstTokenMs: number | null = null
   let answer = ''
@@ -97,12 +101,12 @@ export async function generateReply(messages: ChatMessage[], locale: string, sig
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       credentials: 'same-origin', cache: 'no-store', signal,
-      body: JSON.stringify({ messages: recent, locale: restaurantLocale(locale), thinking }),
+      body: JSON.stringify({ messages: recent, locale: restaurantLocale(locale), restaurant, ...(allergies.length ? { allergies } : {}) }),
     })
     if (!response.ok) throw await responseError(response)
-    if (!response.body) throw new ProviderError('INVALID_RESPONSE', 'Cloudflare returned an empty stream.')
+    if (!response.body) throw new ProviderError('INVALID_RESPONSE', 'The assistant returned an empty stream.')
 
-    publishStatus({ phase: 'generating', progress: 1, text: thinking ? 'Razonando sobre la carta' : 'Preparando tu recomendación' })
+    publishStatus({ phase: 'generating', progress: 1, text: 'Preparando tu respuesta' })
     const parser = new SseParser()
     const decoder = new TextDecoder()
     const reader = response.body.getReader()
@@ -112,10 +116,18 @@ export async function generateReply(messages: ChatMessage[], locale: string, sig
       for (const event of events) {
         if (event.data === '[DONE]') continue
         let chunk: CloudflareChunk
-        try { chunk = JSON.parse(event.data) as CloudflareChunk } catch { throw new ProviderError('INVALID_RESPONSE', 'Cloudflare returned malformed streaming data.') }
+        try { chunk = JSON.parse(event.data) as CloudflareChunk } catch { throw new ProviderError('INVALID_RESPONSE', 'The assistant returned malformed streaming data.') }
         const token = chunk.choices?.[0]?.delta?.content ?? ''
         if (token && firstTokenMs === null) firstTokenMs = performance.now() - startedAt
         if (token) { answer += token; const partial = cleanPartialText(answer); if (partial) onProgress?.(partial) }
+        if (Array.isArray(chunk.platefy_images)) {
+          const images = chunk.platefy_images.slice(0, 3).flatMap(image => {
+            if (!image || typeof image.id !== 'string' || typeof image.nombre !== 'string' || typeof image.src !== 'string' || typeof image.alt !== 'string') return []
+            const safe = safeDishImage({ id: image.id.slice(0, 100), nombre: image.nombre.slice(0, 200), imagen: image.src, imagen_alt: image.alt.slice(0, 300) }, restaurant)
+            return safe ? [safe] : []
+          })
+          onImages?.(images)
+        }
         if (chunk.usage) usage = chunk.usage
         if (typeof chunk.platefy_metrics?.provider_first_token_ms === 'number') firstTokenMs = chunk.platefy_metrics.provider_first_token_ms
         if (typeof chunk.platefy_metrics?.neurons === 'number') neurons = chunk.platefy_metrics.neurons
@@ -131,15 +143,15 @@ export async function generateReply(messages: ChatMessage[], locale: string, sig
       promptTokens: usage?.prompt_tokens ?? null, completionTokens,
       tokensPerSecond: completionTokens === null || generationSeconds <= 0 ? null : completionTokens / generationSeconds,
       neurons,
-      reasoning: thinking ? 'on' : 'off',
+      reasoning: 'off',
     })
-    publishStatus({ phase: 'ready', progress: 1, text: 'Qwen listo' })
+    publishStatus({ phase: 'ready', progress: 1, text: 'Aquí para ayudarte' })
     return answer
   } catch (error) {
     if (signal.aborted) throw new ProviderError('ABORTED', 'Request cancelled.')
-    publishStatus({ phase: 'error', progress: 0, text: 'Qwen no ha podido responder' })
+    publishStatus({ phase: 'error', progress: 0, text: 'No he podido responder' })
     if (error instanceof ProviderError) throw error
-    throw new ProviderError('UNAVAILABLE', error instanceof Error ? error.message : 'Cloudflare Workers AI failed.')
+    throw new ProviderError('UNAVAILABLE', error instanceof Error ? error.message : 'The assistant could not respond.')
   }
 }
 
@@ -163,9 +175,9 @@ export async function synthesizeSpeech(text: string, locale: string, signal: Abo
 export function providerErrorMessage(error: unknown, locale = 'es'): string {
   const code = error instanceof ProviderError ? error.code : 'UNAVAILABLE'
   const copy = {
-    es: { ABORTED: 'Solicitud cancelada.', TIMEOUT: 'La IA está tardando demasiado. Inténtalo de nuevo.', RATE_LIMIT: 'Cloudflare está limitando las peticiones. Espera un minuto y vuelve a intentarlo.', QUOTA: 'La cuota diaria de Workers AI se ha agotado. Vuelve a intentarlo cuando se renueve.', BILLING: 'La conexión de Cloudflare requiere atención.', AUTH: 'La conexión privada con Cloudflare no es válida.', UNAVAILABLE: 'Cloudflare Workers AI no está disponible ahora mismo. Inténtalo de nuevo.', INVALID_RESPONSE: 'La respuesta no superó la verificación de la carta. Inténtalo de nuevo.', UNSUPPORTED_LANGUAGE: 'La voz natural está disponible en español e inglés. Puedes seguir por escrito en catalán.', UNSUPPORTED_BROWSER: 'Este navegador no ofrece esta función.', KNOWLEDGE_UNAVAILABLE: 'No se han podido cargar MENU.json y PL8.md. Recarga la página.' },
-    en: { ABORTED: 'Request cancelled.', TIMEOUT: 'The AI took too long. Please try again.', RATE_LIMIT: 'Cloudflare is rate limiting requests. Wait a minute and try again.', QUOTA: 'The daily Workers AI quota has been used. Try again after it resets.', BILLING: 'The Cloudflare connection requires attention.', AUTH: 'The private Cloudflare connection is invalid.', UNAVAILABLE: 'Cloudflare Workers AI is currently unavailable. Please try again.', INVALID_RESPONSE: 'The reply did not pass menu verification. Please try again.', UNSUPPORTED_LANGUAGE: 'Natural voice is available in Spanish and English. You can keep chatting in Catalan.', UNSUPPORTED_BROWSER: 'This browser does not offer this feature.', KNOWLEDGE_UNAVAILABLE: 'MENU.json and PL8.md could not be loaded. Reload the page.' },
-    ca: { ABORTED: 'Sol·licitud cancel·lada.', TIMEOUT: 'La IA ha trigat massa. Torna-ho a provar.', RATE_LIMIT: 'Cloudflare està limitant les peticions. Espera un minut i torna-ho a provar.', QUOTA: 'La quota diària de Workers AI s’ha esgotat. Torna-ho a provar quan es renovi.', BILLING: 'La connexió de Cloudflare requereix atenció.', AUTH: 'La connexió privada amb Cloudflare no és vàlida.', UNAVAILABLE: 'Cloudflare Workers AI no està disponible ara mateix. Torna-ho a provar.', INVALID_RESPONSE: 'La resposta no ha superat la verificació de la carta. Torna-ho a provar.', UNSUPPORTED_LANGUAGE: 'La veu natural està disponible en castellà i anglès. Pots continuar per escrit en català.', UNSUPPORTED_BROWSER: 'Aquest navegador no ofereix aquesta funció.', KNOWLEDGE_UNAVAILABLE: 'No s’han pogut carregar MENU.json i PL8.md. Recarrega la pàgina.' },
+    es: { ABORTED: 'Solicitud cancelada.', TIMEOUT: 'La IA está tardando demasiado. Inténtalo de nuevo.', RATE_LIMIT: 'Hay muchas consultas en este momento. Espera un minuto y vuelve a intentarlo.', QUOTA: 'Por hoy hemos alcanzado el límite de consultas. Vuelve a intentarlo más tarde.', BILLING: 'La conexión del asistente requiere atención.', AUTH: 'No se ha podido conectar con el asistente.', UNAVAILABLE: 'El asistente no está disponible ahora mismo. Inténtalo de nuevo.', INVALID_RESPONSE: 'La respuesta no superó la verificación de la carta. Inténtalo de nuevo.', UNSUPPORTED_LANGUAGE: 'La voz natural está disponible en español e inglés. Puedes seguir por escrito en catalán.', UNSUPPORTED_BROWSER: 'Este navegador no ofrece esta función.', KNOWLEDGE_UNAVAILABLE: 'No se ha podido abrir la carta. Recarga la página.' },
+    en: { ABORTED: 'Request cancelled.', TIMEOUT: 'The AI took too long. Please try again.', RATE_LIMIT: 'There are many requests right now. Wait a minute and try again.', QUOTA: 'We have reached today’s message limit. Please try again later.', BILLING: 'The assistant connection requires attention.', AUTH: 'The assistant could not connect.', UNAVAILABLE: 'The assistant is currently unavailable. Please try again.', INVALID_RESPONSE: 'The reply did not pass menu verification. Please try again.', UNSUPPORTED_LANGUAGE: 'Natural voice is available in Spanish and English. You can keep chatting in Catalan.', UNSUPPORTED_BROWSER: 'This browser does not offer this feature.', KNOWLEDGE_UNAVAILABLE: 'The menu could not be opened. Reload the page.' },
+    ca: { ABORTED: 'Sol·licitud cancel·lada.', TIMEOUT: 'La IA ha trigat massa. Torna-ho a provar.', RATE_LIMIT: 'Hi ha moltes consultes en aquest moment. Espera un minut i torna-ho a provar.', QUOTA: 'Avui hem arribat al límit de consultes. Torna-ho a provar més tard.', BILLING: 'La connexió de l’assistent requereix atenció.', AUTH: 'No s’ha pogut connectar amb l’assistent.', UNAVAILABLE: 'L’assistent no està disponible ara mateix. Torna-ho a provar.', INVALID_RESPONSE: 'La resposta no ha superat la verificació de la carta. Torna-ho a provar.', UNSUPPORTED_LANGUAGE: 'La veu natural està disponible en castellà i anglès. Pots continuar per escrit en català.', UNSUPPORTED_BROWSER: 'Aquest navegador no ofereix aquesta funció.', KNOWLEDGE_UNAVAILABLE: 'No s’ha pogut obrir la carta. Recarrega la pàgina.' },
   } as const
   return copy[restaurantLocale(locale)][code]
 }

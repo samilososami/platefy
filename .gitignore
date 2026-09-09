@@ -4,3 +4,6 @@ work/
 .vercel/
 .env*
 public/images/*.png
+
+# Generated HTML entries; reproducible from menu.json before dev/build.
+/restaurantes/

@@ -20,9 +20,6 @@
 .chat-header h1 { margin: 0; font-size: 18px; letter-spacing: -.025em; line-height: 1.35; font-weight: 500; }
 .chat-header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
 .chat-header-actions { display: flex; align-items: center; flex-shrink: 0; gap: 12px; }
-.chat-thinking-toggle { display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 13px; border: 1px solid #bdb5a9; border-radius: 7px; background: transparent; color: var(--ink); font-size: 11px; cursor: pointer; }
-.chat-thinking-toggle[aria-pressed='true'] { border-color: var(--accent); color: var(--accent); }
-.chat-thinking-toggle:disabled { border-style: dashed; color: var(--muted); opacity: .62; cursor: help; }
 .chat-header-actions .language-select { height: 42px; border: 1px solid #bdb5a9; border-radius: 7px; padding: 0 12px; }
 .chat-header-actions .language-select select { padding-right: 14px; font-size: 12px; }
 .chat-sound { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 14px; border: 1px solid #bdb5a9; border-radius: 7px; background: transparent; color: var(--ink); font-size: 12px; cursor: pointer; }
@@ -50,10 +47,6 @@
 .chat-orb-wave i:nth-child(3) { height: 29px; }
 .chat-empty h2 { margin: 27px 0 16px; font-family: var(--serif); font-size: clamp(39px, 4.8vw, 72px); font-weight: 400; line-height: 1.04; letter-spacing: -.015em; }
 .chat-empty > p { margin: 0; font-size: 16px; line-height: 1.5; letter-spacing: -.015em; }
-.chat-model-badge { display: inline-flex; align-items: center; gap: 7px; margin-top: 17px; padding: 7px 10px; border: 1px solid #d7d0c6; border-radius: 999px; color: var(--muted); font-size: 10px; }
-.chat-model-badge--menu-ready, .chat-model-badge--ready { border-color: #b9c7ae; color: #59704a; }
-.chat-model-badge--error { border-color: #dfbba6; color: #955b3e; }
-.chat-model-note { margin-top: 7px; color: var(--muted); font-size: 9px; }
 .chat-suggestions { display: grid; gap: 5px; width: min(100%, 310px); margin-top: 26px; text-align: left; }
 .chat-suggestions button { display: flex; align-items: center; gap: 19px; min-height: 48px; padding: 10px 13px; border: 0; border-radius: 7px; background: transparent; color: var(--ink); font-size: 14px; cursor: pointer; text-align: left; transition: background .2s, transform .2s; }
 .chat-suggestions button > svg:first-child { flex-shrink: 0; }
@@ -170,3 +163,5 @@
   .chat-model-note { max-width: 270px; line-height: 1.45; }
   .chat-metrics dl { grid-template-columns: 1fr; }
 }
+/* Restaurant identity extends the existing conversation layout. */
+.chat-theme--ko{--bg:#f5efe6;--ink:#292725;--accent:#c73535;--line:#d4cec3;--muted:#716a60}.chat-theme--ko .chat-rail{background:#eee7db}.chat-theme--ko .orb-body img{filter:hue-rotate(332deg) saturate(.95)}.chat-theme--vita{--bg:#fbf8ee;--ink:#1b512d;--accent:#1c7c54;--line:#ccd3c1;--muted:#5b6c57}.chat-theme--vita .chat-rail{background:#edf0df;border-color:#d9dfca}.chat-theme--vita .orb-body img{filter:hue-rotate(65deg) saturate(.72)}.chat-theme--vita .orb-ring{border-color:#1c7c5455}.chat-theme--vita .orb-halo{box-shadow:0 0 80px #73e2a71c}.chat-theme--vita .chat-orb-wave{color:#1c7c54}.chat-by{font-size:13px;font-weight:400;opacity:.7}.chat-dish-images{display:flex;flex-wrap:wrap;gap:15px;margin:20px 0}.chat-dish-images figure{margin:0;max-width:340px;flex:1 1 220px;overflow:hidden;border-radius:12px;background:#fff8}.chat-dish-images img{width:100%;height:auto;aspect-ratio:1.5;object-fit:cover}.chat-dish-images figcaption{padding:12px 14px;font-size:14px}.chat-dish-images figcaption span{display:block;font-size:10px;color:var(--muted);margin-top:5px}.chat-theme--vita .chat-dialog{background:#fbf8ee}.chat-theme--ko .chat-dialog{background:#f5efe6}

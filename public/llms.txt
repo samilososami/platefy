@@ -1,13 +1,17 @@
-# Platefy
+# platefy
 
-Platefy es un asistente conversacional para restaurantes. Responde preguntas sobre la carta, explica ingredientes, recomienda platos y orienta sobre el local desde la web del restaurante.
+platefy es un asistente para descubrir la carta de un restaurante: platos, ingredientes, precios y fotografías. Cada restaurante tiene su propia carta y conversación.
 
-Rutas principales:
-- https://platefy.samilososami.com/ — producto, capacidades, funcionamiento y preguntas frecuentes.
-- https://platefy.samilososami.com/en/ — versión en inglés de la web del producto.
-- https://platefy.samilososami.com/ca/ — versión en catalán de la web del producto.
-- https://platefy.samilososami.com/chatbot/ — demostración interactiva con una carta ficticia.
-- https://platefy.samilososami.com/menu/MENU.json — carta ficticia estructurada usada por la demostración.
-- https://platefy.samilososami.com/menu/PL8.md — identidad y reglas de comportamiento de PL8.
+- https://platefy.samilososami.com/ — producto y funcionamiento.
+- https://platefy.samilososami.com/en/ — English.
+- https://platefy.samilososami.com/ca/ — Català.
+- https://platefy.samilososami.com/restaurantes/ — restaurantes de muestra.
+- https://platefy.samilososami.com/restaurantes/ko/ — carta de Kō, sushi contemporáneo.
+- https://platefy.samilososami.com/restaurantes/ko/menu.json — datos de Kō.
+- https://platefy.samilososami.com/restaurantes/ko/platefy/ — asistente de Kō.
+- https://platefy.samilososami.com/restaurantes/vita/ — carta de Vita, cocina vegetal.
+- https://platefy.samilososami.com/restaurantes/vita/menu.json — datos de Vita.
+- https://platefy.samilososami.com/restaurantes/vita/platefy/ — asistente de Vita.
+- https://platefy.samilososami.com/platefy.md — identidad y reglas del asistente.
 
-La demostración usa Qwen3 30B-A3B mediante Cloudflare Workers AI. El servidor filtra MENU.json antes de enviar los candidatos necesarios al modelo y valida la respuesta antes de mostrarla. No confirma reservas reales y la información definitiva de alérgenos debe proceder de cada restaurante.
+Kō y Vita son restaurantes de muestra. Sus cartas parten de los diseños facilitados; las recetas ampliadas, los alérgenos y las imágenes son orientativos. No se confirman reservas ni se garantiza ausencia de trazas. La información de alérgenos requiere validación del restaurante antes de un uso real.

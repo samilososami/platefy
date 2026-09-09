@@ -1,4 +1,5 @@
 export type RestaurantLocale = 'es' | 'en' | 'ca'
+export type RestaurantSlug = 'ko' | 'vita'
 export type MenuCategory = 'entrante' | 'principal' | 'postre' | 'bebida'
 
 export interface MenuDish {
@@ -12,6 +13,11 @@ export interface MenuDish {
   dietas: string[]
   picante: number
   disponible: boolean
+  seccion?: string
+  imagen?: string | null
+  imagen_alt?: string | null
+  imagen_generada?: boolean
+  alergenos_verificados?: boolean
 }
 
 export interface RestaurantMenu {
@@ -19,6 +25,11 @@ export interface RestaurantMenu {
   actualizado: string
   restaurante: {
     nombre: string
+    slug?: RestaurantSlug
+    descripcion?: string
+    titular?: string
+    subtitulo?: string
+    hero?: string
     ficticio: boolean
     tipo_cocina: string[]
     moneda: string
@@ -36,9 +47,27 @@ export interface RestaurantMenu {
 export interface RestaurantKnowledge { identity: string; menu: RestaurantMenu }
 export interface MenuFilterResult { dishes: MenuDish[]; isSafetyQuestion: boolean; applied: string[] }
 
-const MENU_URL = '/menu/MENU.json'
-const IDENTITY_URL = '/menu/PL8.md'
-let knowledgePromise: Promise<RestaurantKnowledge> | null = null
+export interface DishImage { id: string; nombre: string; src: string; alt: string }
+
+const IDENTITY_URL = '/platefy.md'
+const knowledgePromises = new Map<RestaurantSlug, Promise<RestaurantKnowledge>>()
+
+export function isRestaurantSlug(value: unknown): value is RestaurantSlug {
+  return value === 'ko' || value === 'vita'
+}
+
+export function getRestaurantSlug(pathname = typeof window === 'undefined' ? '/chatbot' : window.location.pathname): RestaurantSlug {
+  const slug = pathname.match(/^\/restaurantes\/(ko|vita)(?:\/|$)/)?.[1]
+  return isRestaurantSlug(slug) ? slug : 'ko'
+}
+
+/** Only same-restaurant image paths declared in the menu may be rendered in chat. */
+export function safeDishImage(dish: Pick<MenuDish, 'id' | 'nombre' | 'imagen' | 'imagen_alt'>, slug: RestaurantSlug): DishImage | null {
+  const src = dish.imagen
+  if (typeof src !== 'string' || !/^\/[a-zA-Z0-9_/-]+(?:\.[a-zA-Z0-9_-]+)*\.(?:avif|webp|png|jpe?g)$/i.test(src)) return null
+  if (!src.startsWith(`/restaurantes/${slug}/`) && !src.startsWith(`/assets/restaurantes/${slug}/`)) return null
+  return { id: dish.id, nombre: dish.nombre, src, alt: dish.imagen_alt?.trim() || dish.nombre }
+}
 
 function isMenu(value: unknown): value is RestaurantMenu {
   if (!value || typeof value !== 'object') return false
@@ -49,19 +78,22 @@ function isMenu(value: unknown): value is RestaurantMenu {
       && Array.isArray(dish.alergenos) && Array.isArray(dish.dietas))
 }
 
-/** Loads the only two knowledge sources used by PL8. The browser HTTP cache may reuse them. */
-export function loadRestaurantKnowledge(force = false): Promise<RestaurantKnowledge> {
-  if (knowledgePromise && !force) return knowledgePromise
-  knowledgePromise = Promise.all([
-    fetch(IDENTITY_URL, { credentials: 'same-origin', cache: 'default' }),
-    fetch(MENU_URL, { credentials: 'same-origin', cache: 'default' }),
+/** The identity and this restaurant's menu are the assistant's only knowledge files. */
+export function loadRestaurantKnowledge(force = false, slug: RestaurantSlug = getRestaurantSlug()): Promise<RestaurantKnowledge> {
+  if (!isRestaurantSlug(slug)) return Promise.reject(new Error('KNOWLEDGE_INVALID'))
+  const existing = knowledgePromises.get(slug)
+  if (existing && !force) return existing
+  const pending = Promise.all([
+    fetch(IDENTITY_URL, { credentials: 'same-origin', cache: 'no-cache' }),
+    fetch(`/restaurantes/${slug}/menu.json`, { credentials: 'same-origin', cache: 'no-cache' }),
   ]).then(async ([identityResponse, menuResponse]) => {
     if (!identityResponse.ok || !menuResponse.ok) throw new Error('KNOWLEDGE_UNAVAILABLE')
     const [identity, menuValue] = await Promise.all([identityResponse.text(), menuResponse.json()])
-    if (!identity.trim() || !isMenu(menuValue)) throw new Error('KNOWLEDGE_INVALID')
+    if (!identity.trim() || !isMenu(menuValue) || menuValue.restaurante.slug !== slug) throw new Error('KNOWLEDGE_INVALID')
     return { identity: identity.trim(), menu: menuValue }
-  }).catch(error => { knowledgePromise = null; throw error })
-  return knowledgePromise
+  }).catch(error => { if (knowledgePromises.get(slug) === pending) knowledgePromises.delete(slug); throw error })
+  knowledgePromises.set(slug, pending)
+  return pending
 }
 
 export function restaurantLocale(locale: string): RestaurantLocale {
@@ -81,9 +113,34 @@ const allergenTerms: Record<string, string[]> = {
   huevo: ['huevo', 'egg', 'ou'], pescado: ['pescado', 'fish', 'peix'], crustaceos: ['marisco', 'crustaceo', 'gamba', 'langostino', 'shellfish'],
   moluscos: ['molusco', 'calamar', 'sepia', 'mollusc'], soja: ['soja', 'soy'], sesamo: ['sesamo', 'sesame'],
   mostaza: ['mostaza', 'mustard'], sulfitos: ['sulfito', 'sulphite'], apio: ['apio', 'celery'],
+  altramuces: ['altramuz', 'altramuces', 'lupin', 'lupine'],
 }
 
+export const ALLERGEN_IDS = Object.keys(allergenTerms)
+
 function mentionsAny(question: string, terms: string[]) { return terms.some(term => question.includes(term)) }
+function allergenMention(text: string, term: string) {
+  return new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:s|es|[oa]s?)?\\b`, 'i').test(text)
+}
+
+/** Match allergen names only inside exclusion clauses, not positive ingredient preferences. */
+export function excludedAllergens(raw: string): string[] {
+  const text = normalize(raw)
+  const sections: string[] = []
+  const starts = /\b(?:sin|without|sense|alerg(?:ia|ic[oa]?s?)|allerg(?:y|ic)|intoleran(?:cia|te|t)|no (?:puedo|debo|quiero) (?:comer|tomar|consumir)|avoid|evitar|evito|free of)\b/g
+  for (const match of text.matchAll(starts)) {
+    const before = text.slice(Math.max(0, match.index! - 20), match.index)
+    if (/(?:no (?:tengo|soy)|not|no)\s*$/.test(before) && /alerg|allerg/.test(match[0])) continue
+    const remainder = text.slice(match.index! + match[0].length)
+    sections.push(remainder.split(/[.!?;]|\b(?:pero|but|con|with|amb|quiero|me apetece|muestrame|ensename)\b/)[0])
+  }
+  const found = Object.entries(allergenTerms).filter(([, terms]) => terms.some(term => sections.some(section => allergenMention(section, term)) || new RegExp(`\\b${term}[ -]?free\\b`).test(text))).map(([name]) => name)
+  if (/celiac|celiaq/.test(text) && !found.includes('gluten')) found.push('gluten')
+  if (/\bdairy[ -]?free\b/.test(text) && !found.includes('leche')) found.push('leche')
+  if (/\bnut[ -]?free\b/.test(text) && !found.includes('frutos_de_cascara')) found.push('frutos_de_cascara')
+  if (found.includes('frutos_de_cascara') && !found.includes('cacahuetes')) found.push('cacahuetes')
+  return found
+}
 function compactDish(dish: MenuDish) {
   return { id: dish.id, nombre: dish.nombre, categoria: dish.categoria, precio: dish.precio,
     descripcion: dish.descripcion, ingredientes: dish.ingredientes, alergenos: dish.alergenos,
@@ -95,14 +152,13 @@ function leanDish(dish: MenuDish) {
 }
 
 /** Deterministic filtering runs before the LLM, especially for allergen and budget requests. */
-export function filterMenu(menu: RestaurantMenu, rawQuestion: string): MenuFilterResult {
+export function filterMenu(menu: RestaurantMenu, rawQuestion: string, previousUserQuestions: string[] = []): MenuFilterResult {
   const question = normalize(rawQuestion)
   const applied: string[] = []
-  const safetyWords = /alerg|intoler|celiac|celiaq|traza|trace|contaminacion|cross.?contamination|gluten.?free|nut.?free|dairy.?free|(?:sin|without|sense)\s/.test(question)
-  const excludedAllergens = Object.entries(allergenTerms)
-    .filter(([, terms]) => mentionsAny(question, terms) && safetyWords).map(([allergen]) => allergen)
-  if (excludedAllergens.includes('frutos_de_cascara') && !excludedAllergens.includes('cacahuetes')) excludedAllergens.push('cacahuetes')
-  if (excludedAllergens.length) applied.push(`excluir_alergenos:${excludedAllergens.join(',')}`)
+  const priorExclusions = previousUserQuestions.flatMap(excludedAllergens)
+  const exclusions = [...new Set([...priorExclusions, ...excludedAllergens(question)])]
+  const safetyWords = priorExclusions.length > 0 || /alerg|allerg|intoler|celiac|celiaq|traza|trace|contaminacion|cross.?contamination|gluten.?free|nut.?free|dairy.?free|(?:sin|without|sense)\s/.test(question)
+  if (exclusions.length) applied.push(`excluir_alergenos:${exclusions.join(',')}`)
 
   const vegan = /\bvegan[oa]?s?\b|\bvega\b/.test(question)
   const vegetarian = /\bvegetarian[oa]?s?\b|\bvegetaria\b/.test(question)
@@ -115,7 +171,7 @@ export function filterMenu(menu: RestaurantMenu, rawQuestion: string): MenuFilte
   const budget = budgetMatch ? Number(budgetMatch[1].replace(',', '.')) : null
   if (budget !== null && Number.isFinite(budget)) applied.push(`precio_maximo:${budget}`)
 
-  const categoryAliases: Record<MenuCategory, string[]> = { entrante: ['entrante', 'starter', 'appetizer'], principal: ['principal', 'plato', 'main'], postre: ['postre', 'dessert'], bebida: ['bebida', 'drink'] }
+  const categoryAliases: Record<MenuCategory, string[]> = { entrante: ['entrante', 'starter', 'appetizer'], principal: ['principal', 'main'], postre: ['postre', 'dessert'], bebida: ['bebida', 'drink'] }
   const category = (Object.keys(categoryAliases) as MenuCategory[]).find(value => mentionsAny(question, categoryAliases[value]))
   if (category) applied.push(`categoria:${category}`)
 
@@ -125,11 +181,14 @@ export function filterMenu(menu: RestaurantMenu, rawQuestion: string): MenuFilte
   })
 
   let dishes = menu.platos.filter(dish => dish.disponible)
-  if (excludedAllergens.length) dishes = dishes.filter(dish => !excludedAllergens.some(allergen => dish.alergenos.includes(allergen)))
+  if (exclusions.length) dishes = dishes.filter(dish => !exclusions.some(allergen => dish.alergenos.includes(allergen)))
   if (vegan) dishes = dishes.filter(dish => dish.dietas.includes('vegano'))
   else if (vegetarian) dishes = dishes.filter(dish => dish.dietas.includes('vegetariano'))
   if (meat) dishes = dishes.filter(dish => dish.dietas.includes('carne'))
-  if (budget !== null && Number.isFinite(budget)) dishes = dishes.filter(dish => dish.precio < budget)
+  if (budget !== null && Number.isFinite(budget)) {
+    const strict = /^(?:menos de|menys de|under|less than|<)/.test(budgetMatch![0])
+    dishes = dishes.filter(dish => strict ? dish.precio < budget : dish.precio <= budget)
+  }
   if (category) dishes = dishes.filter(dish => dish.categoria === category)
 
   if (!applied.length && named.length) dishes = named
@@ -141,20 +200,21 @@ export function filterMenu(menu: RestaurantMenu, rawQuestion: string): MenuFilte
     })
     if (relevant.length) dishes = relevant
   }
-  return { dishes: dishes.slice(0, applied.length ? 14 : 34), isSafetyQuestion: safetyWords, applied }
+  return { dishes, isSafetyQuestion: safetyWords, applied }
 }
 
-export function getGroundedContext(knowledge: RestaurantKnowledge, question: string): { system: string; filter: MenuFilterResult } {
-  const filter = filterMenu(knowledge.menu, question)
+export function getGroundedContext(knowledge: RestaurantKnowledge, question: string, previousUserQuestions: string[] = []): { system: string; filter: MenuFilterResult } {
+  const filter = filterMenu(knowledge.menu, question, previousUserQuestions)
   const restaurant = knowledge.menu.restaurante
-  const candidates = filter.dishes.length > 14 ? filter.dishes.map(leanDish) : filter.dishes.map(compactDish)
-  const system = [knowledge.identity, 'DATOS_DEL_RESTAURANTE (fuente: MENU.json):', JSON.stringify({
+  const selection = filter.dishes.slice(0, filter.applied.length ? 14 : 34)
+  const candidates = selection.length > 14 ? selection.map(leanDish) : selection.map(compactDish)
+  const system = [knowledge.identity, `Eres platefy, el asistente de ${restaurant.nombre}. Solo conoces la carta de este restaurante. Las conversaciones anteriores no son una fuente de datos. Nunca inventes platos, precios, ingredientes o imágenes. No escribas URLs ni imágenes Markdown: la aplicación añade las fotografías verificadas.`, 'DATOS_DEL_RESTAURANTE (fuente: menu.json):', JSON.stringify({
     nombre: restaurant.nombre, ficticio: restaurant.ficticio, cocina: restaurant.tipo_cocina,
     moneda: restaurant.moneda, horarios_cocina: restaurant.horarios_cocina,
     direccion: restaurant.direccion, telefono: restaurant.telefono,
     reservas_en_tiempo_real: restaurant.reservas_en_tiempo_real, aviso_alergenos: restaurant.aviso_alergenos,
   }), `FILTRO_DETERMINISTA: ${JSON.stringify({ aplicado: filter.applied, consulta_sensible: filter.isSafetyQuestion, coincidencias: filter.dishes.length })}`,
-  'CANDIDATOS_VERIFICADOS (fuente: MENU.json):', JSON.stringify(candidates),
+  'CANDIDATOS_VERIFICADOS (fuente: menu.json):', JSON.stringify(candidates),
   filter.applied.length ? 'La selección anterior ya aplica las restricciones detectadas. Recomienda únicamente esos candidatos; si está vacía, indica que no hay coincidencias.'
     : 'Responde solo con los datos anteriores. Si la pregunta no trata sobre la carta, usa únicamente DATOS_DEL_RESTAURANTE.'].join('\n\n')
   return { system, filter }

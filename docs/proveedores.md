@@ -1,21 +1,31 @@
 # Proveedores y ejecución
 
-## Texto: Qwen3 30B-A3B + Cloudflare Workers AI
+## Texto: Cloudflare Workers AI
 
-El chat usa [`@cf/qwen/qwen3-30b-a3b-fp8`](https://developers.cloudflare.com/workers-ai/models/qwen3-30b-a3b-fp8/) mediante un Worker con binding de Workers AI. Vercel solo conserva la URL del Worker y un secreto compartido; ninguna credencial de Cloudflare llega al navegador.
+El asistente se llama **platefy**. Usa [`@cf/qwen/qwen3-30b-a3b-fp8`](https://developers.cloudflare.com/workers-ai/models/qwen3-30b-a3b-fp8/) mediante un Worker con binding de Workers AI. Vercel conserva `CLOUDFLARE_WORKER_URL` y `CLOUDFLARE_WORKER_SECRET`; el Worker valida el secreto con `ORIGIN_SECRET`. Ninguna credencial de Cloudflare llega al navegador.
 
-Platefy usa `chat_template_kwargs.enable_thinking` para activar el pensamiento ampliado cuando el usuario selecciona “Razonar más”. La respuesta visible se normaliza en el Worker y la traza interna no se entrega al cliente.
+`api/chat.ts` envía siempre `thinking: false`. No hay selector de razonamiento ni nombres de proveedores o modelos en la conversación. Las métricas técnicas del transporte no forman parte de la interfaz del comensal.
 
-## Contexto y seguridad de carta
+## Restaurantes y fuentes
 
-Las únicas fuentes del restaurante son:
+`/restaurantes/` reúne Kō y Vita. Cada restaurante tiene una carta digital y su propia conversación:
 
-- `/menu/MENU.json`: 34 referencias ficticias con categoría, precio, descripción, ingredientes, alérgenos, dietas y disponibilidad.
-- `/menu/PL8.md`: identidad, tono y reglas de PL8.
+| Restaurante | Carta | Chat | Datos |
+| --- | --- | --- | --- |
+| Kō | `/restaurantes/ko/` | `/restaurantes/ko/platefy/` | `/restaurantes/ko/menu.json` |
+| Vita | `/restaurantes/vita/` | `/restaurantes/vita/platefy/` | `/restaurantes/vita/menu.json` |
 
-`api/chat.ts` no acepta modelo, menú ni prompt de sistema desde el cliente. Valida roles y tamaños, limita el historial a siete mensajes, vuelve a ejecutar el filtro determinista de `src/services/restaurant.ts` y envía a Cloudflare Workers AI solo los candidatos pertinentes. La salida se almacena hasta completarse y se rechaza si menciona un plato conocido que el filtro había excluido. En preguntas sensibles añade siempre la indicación de confirmar trazas y contaminación cruzada.
+Las únicas fuentes de conocimiento son `/platefy.md`, con la identidad y las reglas compartidas, y el `menu.json` del restaurante seleccionado. Cada JSON incluye platos, precios, descripciones, ingredientes, alérgenos, dietas, disponibilidad y rutas de imágenes. Las cartas son ejemplos; los datos de alérgenos no sustituyen una validación de cocina. `/chatbot/` y las antiguas rutas de carta genérica redirigen al directorio de restaurantes.
 
-La Function limita el tamaño de entrada, la salida, el origen y las solicitudes por instancia. El Worker exige un secreto de servidor y fija el modelo; una versión multi-restaurante necesitará credenciales y límites persistentes por restaurante.
+## Contexto, imágenes y límites
+
+El cliente envía `restaurant: "ko" | "vita"`, el idioma y hasta siete mensajes. `api/chat.ts` valida el identificador contra una lista cerrada y carga los archivos del restaurante desde el servidor. No acepta un menú, un modelo ni un prompt de sistema proporcionados por el navegador.
+
+El filtro determinista compartido en `src/services/restaurant.ts` selecciona candidatos por ingredientes, alérgenos, dieta, categoría y presupuesto antes de llamar al modelo. La salida completa se valida antes de entregarse. Si menciona por su nombre un plato conocido que el filtro ha excluido, se rechaza; esto no constituye una garantía general contra alucinaciones. En consultas de alergias se recuerda confirmar trazas y contaminación cruzada con el equipo.
+
+Las peticiones de fotografías se resuelven con datos del menú sin invocar el modelo. Los adjuntos solo admiten imágenes declaradas en el JSON y ubicadas bajo las rutas del mismo restaurante. El cliente vuelve a validar esas rutas antes de mostrarlas. No se usan URLs inventadas por el modelo ni se envían imágenes a inferencia.
+
+La Function limita tamaño, historial, duración, origen y solicitudes por instancia. Kō y Vita comparten actualmente la conexión y cuota de Workers AI. Para cuentas independientes por restaurante harían falta credenciales y límites persistentes separados; esta versión no los implementa.
 
 ## Voz
 
@@ -23,4 +33,4 @@ La Function limita el tamaño de entrada, la salida, el origen y las solicitudes
 - Inglés: [Kokoro TTS Zero](https://huggingface.co/spaces/remsky/Kokoro-TTS-Zero), voz `af_sky`.
 - Entrada: `SpeechRecognition` o `webkitSpeechRecognition` del navegador.
 
-El audio es opcional. Solo al activarlo se envía el texto de una respuesta al Space de voz. No hay voz catalana verificada; el chat escrito sigue disponible.
+El sonido es opcional. Solo al solicitarlo se envía el texto de una respuesta al servicio de voz. La voz catalana no está verificada; el chat escrito sigue disponible. Los servicios externos de voz pueden imponer cuotas o estar temporalmente indisponibles.

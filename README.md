@@ -24,7 +24,7 @@ React 19, TypeScript y Vite. La compilación genera las entradas estáticas `/`,
 
 El chat usa `@cf/qwen/qwen3-30b-a3b-fp8` mediante Cloudflare Workers AI. La Function de Vercel se comunica con el Worker `platefy-ai-proxy` usando un secreto compartido que nunca llega al navegador. `/api/` muestra el estado y permite probar esta conexión.
 
-Las únicas fuentes de conocimiento del restaurante son [`public/menu/MENU.json`](./public/menu/MENU.json) y [`public/menu/PL8.md`](./public/menu/PL8.md). La Function filtra primero restricciones de alérgenos, dieta, categoría y presupuesto; Qwen3 recibe solo los candidatos verificados. La salida completa se valida antes de enviarla al navegador. El control “Razonar más” activa o desactiva el modo de pensamiento ampliado de Qwen3.
+Cada restaurante carga exclusivamente su `public/restaurantes/<slug>/menu.json` y la identidad compartida `public/platefy.md`. El agente se llama platefy. Solo se admiten `ko` y `vita`; el servidor selecciona la carta desde esa lista, nunca desde datos proporcionados por el navegador. La Function filtra alérgenos, dieta, categoría y presupuesto. Las fotos se resuelven desde rutas verificadas del mismo menú y se adjuntan al chat, sin visión ni URLs inventadas por el modelo. El pensamiento extendido está desactivado.
 
 La voz española e inglesa se genera con Kokoro y la entrada hablada usa el reconocimiento del navegador. Las preguntas se procesan en Cloudflare Workers AI; si el usuario activa la voz, el texto de la respuesta también se envía a Kokoro. La voz catalana no está disponible en los proveedores verificados.
 
@@ -38,3 +38,13 @@ Los detalles de implementación, proveedores y validación están en [`docs/`](.
 
 
 _*xavisami&co*_
+
+
+## Cartas de muestra
+
+- `/restaurantes/`: directorio.
+- `/restaurantes/ko/` y `/restaurantes/vita/`: cartas digitales.
+- `/restaurantes/<slug>/platefy/`: conversación del restaurante.
+- `/restaurantes/<slug>/menu.json`: datos públicos e imágenes de esa carta.
+
+`npm run dev` y `npm run build` generan las páginas HTML desde los JSON mediante `scripts/create-restaurant-pages.mjs`. Los platos se renderizan como HTML estático; el JS de carta solo gestiona búsqueda y detalles. Los JSON deben mantener IDs únicos y rutas de imagen dentro de su restaurante. Las cartas parten de Figma; ingredientes ampliados y alérgenos son recetas de muestra no verificadas. Las imágenes son ilustrativas generadas. Las propuestas visuales están en `docs/design/`. No hay reservas reales.

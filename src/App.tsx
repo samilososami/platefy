@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import type { Locale } from './content';
 import { Orb } from './ui';
+import { getRestaurantSlug } from './services/restaurant';
 
 const Chatbot = lazy(() => import('./Chatbot'));
 export default function App() {
@@ -12,11 +13,7 @@ export default function App() {
     try { localStorage.setItem('platefy-language', locale); } catch { /* private browsing */ }
   }, [locale]);
   useEffect(() => {
-    document.title = {
-      es: 'La mesa de Platefy — Tu asistente',
-      en: 'The Platefy table — Your assistant',
-      ca: 'La taula de Platefy — El teu assistent',
-    }[locale];
+    document.title = `${getRestaurantSlug() === 'vita' ? 'Vita' : 'Kō'} · platefy`;
   }, [locale]);
   return <Suspense fallback={<div className="page-loading"><Orb state="appearing" /><span>Platefy</span></div>}><Chatbot locale={locale} onLocaleChange={setLocale} /></Suspense>;
 }

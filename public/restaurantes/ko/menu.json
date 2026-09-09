@@ -1,0 +1,826 @@
+{
+  "schema_version": "2.0",
+  "actualizado": "2026-09-09",
+  "restaurante": {
+    "nombre": "Kō",
+    "slug": "ko",
+    "descripcion": "Sushi, pequeños platos japoneses y el placer de compartir.",
+    "titular": "Buen sushi, mejor compañía.",
+    "subtitulo": "La calma de Japón. El sabor de aquí.",
+    "hero": "/restaurantes/ko/images/nigiri-salmon.webp",
+    "ficticio": true,
+    "tipo_cocina": [
+      "japonesa",
+      "sushi"
+    ],
+    "moneda": "EUR",
+    "precios_incluyen_iva": true,
+    "horarios_cocina": {
+      "comidas": "No facilitado",
+      "cenas": "No facilitado"
+    },
+    "direccion": null,
+    "telefono": null,
+    "reservas_en_tiempo_real": false,
+    "aviso_alergenos": "Carta de muestra: las recetas y los alérgenos son orientativos y no están verificados por una cocina. No garantizamos ausencia de trazas ni de contaminación cruzada. Si tienes alergias o intolerancias, confirma siempre los ingredientes y la preparación con el personal.",
+    "aviso_imagenes": "Las fotografías son ilustraciones generadas para esta carta de muestra; la presentación real puede variar."
+  },
+  "categorias": [
+    "entrante",
+    "principal",
+    "postre",
+    "bebida"
+  ],
+  "alergenos_controlados": [
+    "gluten",
+    "crustaceos",
+    "huevo",
+    "pescado",
+    "cacahuetes",
+    "soja",
+    "leche",
+    "frutos_de_cascara",
+    "apio",
+    "mostaza",
+    "sesamo",
+    "sulfitos",
+    "altramuces",
+    "moluscos"
+  ],
+  "origen_datos": {
+    "carta": "Nombres, categorías y precios transcritos del diseño facilitado en Figma.",
+    "recetas": "Ingredientes y alérgenos ampliados como recetas ficticias de demostración; no constituyen información alimentaria validada.",
+    "ubicacion": "La identidad visual menciona Tarragona; no se ha facilitado dirección, teléfono ni horario."
+  },
+  "platos": [
+    {
+      "id": "edamame",
+      "nombre": "Edamame",
+      "seccion": "Entrantes",
+      "categoria": "entrante",
+      "precio": 5.5,
+      "descripcion": "Habas de soja al vapor con sal marina.",
+      "ingredientes": [
+        "edamame (soja)",
+        "sal marina"
+      ],
+      "alergenos": [
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": "/restaurantes/ko/images/edamame.webp",
+      "imagen_alt": "Cuenco de cerámica oscura con vainas de edamame al vapor y sal marina; imagen ilustrativa.",
+      "imagen_generada": true
+    },
+    {
+      "id": "tataki-atun",
+      "nombre": "Tataki de atún",
+      "seccion": "Entrantes",
+      "categoria": "entrante",
+      "precio": 9.5,
+      "descripcion": "Atún ligeramente sellado con salsa ponzu.",
+      "ingredientes": [
+        "atún",
+        "salsa de soja (soja, trigo)",
+        "zumo de yuzu",
+        "vinagre de arroz",
+        "aceite vegetal",
+        "hoja de shiso"
+      ],
+      "alergenos": [
+        "pescado",
+        "soja",
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": "/restaurantes/ko/images/tataki-atun.webp",
+      "imagen_alt": "Láminas de tataki de atún de centro rojo y bordes sellados con ponzu en un plato oscuro; imagen ilustrativa.",
+      "imagen_generada": true
+    },
+    {
+      "id": "ensalada-algas",
+      "nombre": "Ensalada de algas",
+      "seccion": "Entrantes",
+      "categoria": "entrante",
+      "precio": 6,
+      "descripcion": "Algas con vinagreta de sésamo.",
+      "ingredientes": [
+        "alga wakame",
+        "sésamo",
+        "aceite de sésamo",
+        "vinagre de arroz",
+        "salsa de soja (soja, trigo)",
+        "azúcar"
+      ],
+      "alergenos": [
+        "sesamo",
+        "soja",
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": "/restaurantes/ko/images/ensalada-algas.webp",
+      "imagen_alt": "Cuenco oscuro con ensalada de alga wakame verde y vinagreta de sésamo; imagen ilustrativa.",
+      "imagen_generada": true
+    },
+    {
+      "id": "gyozas-langostino",
+      "nombre": "Gyozas de langostino",
+      "seccion": "Entrantes",
+      "categoria": "entrante",
+      "precio": 7.5,
+      "descripcion": "Cuatro gyozas de langostino con salsa teriyaki.",
+      "ingredientes": [
+        "langostino",
+        "harina de trigo",
+        "col",
+        "cebolleta",
+        "jengibre",
+        "ajo",
+        "salsa de soja (soja, trigo)",
+        "mirin",
+        "azúcar",
+        "aceite vegetal"
+      ],
+      "alergenos": [
+        "crustaceos",
+        "gluten",
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": "/restaurantes/ko/images/gyozas-langostino.webp",
+      "imagen_alt": "Cuatro gyozas doradas de langostino con salsa teriyaki sobre cerámica oscura; imagen ilustrativa.",
+      "imagen_generada": true,
+      "porcion": "4 unidades"
+    },
+    {
+      "id": "nigiri-salmon",
+      "nombre": "Nigiri de salmón",
+      "seccion": "Nigiris",
+      "categoria": "principal",
+      "precio": 3.5,
+      "descripcion": "Dos piezas de arroz de sushi cubiertas con salmón.",
+      "ingredientes": [
+        "arroz de sushi",
+        "salmón",
+        "vinagre de arroz",
+        "azúcar",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": "/restaurantes/ko/images/nigiri-salmon.webp",
+      "imagen_alt": "Dos nigiris de salmón de color naranja sobre arroz blanco, en un plato artesanal negro; imagen ilustrativa.",
+      "imagen_generada": true,
+      "porcion": "2 unidades"
+    },
+    {
+      "id": "nigiri-atun",
+      "nombre": "Nigiri de atún rojo",
+      "seccion": "Nigiris",
+      "categoria": "principal",
+      "precio": 4,
+      "descripcion": "Dos piezas de arroz de sushi con atún rojo.",
+      "ingredientes": [
+        "arroz de sushi",
+        "atún rojo",
+        "vinagre de arroz",
+        "azúcar",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false,
+      "porcion": "2 unidades"
+    },
+    {
+      "id": "nigiri-langostino",
+      "nombre": "Nigiri de langostino",
+      "seccion": "Nigiris",
+      "categoria": "principal",
+      "precio": 3.5,
+      "descripcion": "Dos piezas de arroz de sushi con langostino.",
+      "ingredientes": [
+        "arroz de sushi",
+        "langostino",
+        "vinagre de arroz",
+        "azúcar",
+        "sal"
+      ],
+      "alergenos": [
+        "crustaceos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false,
+      "porcion": "2 unidades"
+    },
+    {
+      "id": "nigiri-vieira",
+      "nombre": "Nigiri de vieira",
+      "seccion": "Nigiris",
+      "categoria": "principal",
+      "precio": 4.5,
+      "descripcion": "Dos piezas de arroz de sushi con vieira.",
+      "ingredientes": [
+        "arroz de sushi",
+        "vieira",
+        "vinagre de arroz",
+        "azúcar",
+        "sal"
+      ],
+      "alergenos": [
+        "moluscos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false,
+      "porcion": "2 unidades"
+    },
+    {
+      "id": "nigiri-anguila",
+      "nombre": "Nigiri de anguila",
+      "seccion": "Nigiris",
+      "categoria": "principal",
+      "precio": 5,
+      "descripcion": "Dos piezas de arroz de sushi con anguila y su glaseado.",
+      "ingredientes": [
+        "arroz de sushi",
+        "anguila",
+        "salsa de soja (soja, trigo)",
+        "mirin",
+        "azúcar",
+        "vinagre de arroz",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado",
+        "soja",
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false,
+      "porcion": "2 unidades"
+    },
+    {
+      "id": "dragon-roll",
+      "nombre": "Dragon Roll",
+      "seccion": "Rolls especiales",
+      "categoria": "principal",
+      "precio": 14.5,
+      "descripcion": "Langostino tempurizado, aguacate, salsa teriyaki y topping de anguila.",
+      "ingredientes": [
+        "arroz de sushi",
+        "alga nori",
+        "langostino",
+        "aguacate",
+        "anguila",
+        "harina de trigo",
+        "huevo",
+        "salsa de soja (soja, trigo)",
+        "mirin",
+        "azúcar",
+        "vinagre de arroz",
+        "aceite vegetal"
+      ],
+      "alergenos": [
+        "crustaceos",
+        "pescado",
+        "gluten",
+        "huevo",
+        "soja"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "rainbow-roll",
+      "nombre": "Rainbow Roll",
+      "seccion": "Rolls especiales",
+      "categoria": "principal",
+      "precio": 13.5,
+      "descripcion": "Salmón, atún, aguacate y salsa de maracuyá.",
+      "ingredientes": [
+        "arroz de sushi",
+        "alga nori",
+        "salmón",
+        "atún",
+        "aguacate",
+        "maracuyá",
+        "azúcar",
+        "vinagre de arroz",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "ko-roll",
+      "nombre": "Kō Roll",
+      "seccion": "Rolls especiales",
+      "categoria": "principal",
+      "precio": 12.5,
+      "descripcion": "Atún, salmón, queso crema y cebollino.",
+      "ingredientes": [
+        "arroz de sushi",
+        "alga nori",
+        "atún",
+        "salmón",
+        "queso crema (leche)",
+        "cebollino",
+        "vinagre de arroz",
+        "azúcar",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado",
+        "leche"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "crunchy-roll",
+      "nombre": "Crunchy Roll",
+      "seccion": "Rolls especiales",
+      "categoria": "principal",
+      "precio": 12,
+      "descripcion": "Langostino, aguacate y crujiente de tempura.",
+      "ingredientes": [
+        "arroz de sushi",
+        "alga nori",
+        "langostino",
+        "aguacate",
+        "harina de trigo",
+        "huevo",
+        "vinagre de arroz",
+        "azúcar",
+        "sal",
+        "aceite vegetal"
+      ],
+      "alergenos": [
+        "crustaceos",
+        "gluten",
+        "huevo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "maki-salmon",
+      "nombre": "Salmón clásico",
+      "seccion": "Makis",
+      "categoria": "principal",
+      "precio": 8.5,
+      "descripcion": "Maki de salmón, aguacate y pepino.",
+      "ingredientes": [
+        "arroz de sushi",
+        "alga nori",
+        "salmón",
+        "aguacate",
+        "pepino",
+        "vinagre de arroz",
+        "azúcar",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "maki-atun-spicy",
+      "nombre": "Atún spicy",
+      "seccion": "Makis",
+      "categoria": "principal",
+      "precio": 9,
+      "descripcion": "Maki de atún picante, cebollino y sésamo.",
+      "ingredientes": [
+        "arroz de sushi",
+        "alga nori",
+        "atún",
+        "cebollino",
+        "sésamo",
+        "guindilla",
+        "mayonesa (huevo, aceite, vinagre)",
+        "vinagre de arroz",
+        "azúcar",
+        "sal"
+      ],
+      "alergenos": [
+        "pescado",
+        "sesamo",
+        "huevo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 2,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "maki-vegetal",
+      "nombre": "Vegetal",
+      "seccion": "Makis",
+      "categoria": "principal",
+      "precio": 7.5,
+      "descripcion": "Maki de aguacate, pepino, zanahoria y mango.",
+      "ingredientes": [
+        "arroz de sushi",
+        "alga nori",
+        "aguacate",
+        "pepino",
+        "zanahoria",
+        "mango",
+        "vinagre de arroz",
+        "azúcar",
+        "sal"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "maki-california",
+      "nombre": "California",
+      "seccion": "Makis",
+      "categoria": "principal",
+      "precio": 8,
+      "descripcion": "Maki de cangrejo, aguacate y mayonesa japonesa.",
+      "ingredientes": [
+        "arroz de sushi",
+        "alga nori",
+        "cangrejo",
+        "aguacate",
+        "mayonesa japonesa (huevo, aceite, vinagre, mostaza)",
+        "vinagre de arroz",
+        "azúcar",
+        "sal"
+      ],
+      "alergenos": [
+        "crustaceos",
+        "huevo",
+        "mostaza"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "sashimi-salmon",
+      "nombre": "Sashimi de salmón",
+      "seccion": "Sashimis",
+      "categoria": "principal",
+      "precio": 11,
+      "descripcion": "Cortes de salmón, sin arroz.",
+      "ingredientes": [
+        "salmón"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "sashimi-atun",
+      "nombre": "Sashimi de atún rojo",
+      "seccion": "Sashimis",
+      "categoria": "principal",
+      "precio": 13,
+      "descripcion": "Cortes de atún rojo, sin arroz.",
+      "ingredientes": [
+        "atún rojo"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "sashimi-mixto",
+      "nombre": "Sashimi mixto",
+      "seccion": "Sashimis",
+      "categoria": "principal",
+      "precio": 15,
+      "descripcion": "Selección de cortes de salmón y atún rojo, sin arroz.",
+      "ingredientes": [
+        "salmón",
+        "atún rojo"
+      ],
+      "alergenos": [
+        "pescado"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "mochi-helado",
+      "nombre": "Mochi helado",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 5.5,
+      "descripcion": "Masa de arroz rellena de helado de vainilla.",
+      "ingredientes": [
+        "harina de arroz glutinoso",
+        "azúcar",
+        "agua",
+        "leche",
+        "nata (leche)",
+        "vainilla"
+      ],
+      "alergenos": [
+        "leche"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "tarta-yuzu",
+      "nombre": "Tarta de yuzu",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 6.5,
+      "descripcion": "Tarta cremosa de cítrico yuzu con base de galleta.",
+      "ingredientes": [
+        "yuzu",
+        "harina de trigo",
+        "mantequilla (leche)",
+        "huevo",
+        "nata (leche)",
+        "azúcar"
+      ],
+      "alergenos": [
+        "gluten",
+        "leche",
+        "huevo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "cheesecake-matcha",
+      "nombre": "Cheesecake de matcha",
+      "seccion": "Postres",
+      "categoria": "postre",
+      "precio": 6,
+      "descripcion": "Tarta de queso con té matcha y base de galleta.",
+      "ingredientes": [
+        "queso crema (leche)",
+        "té matcha",
+        "harina de trigo",
+        "mantequilla (leche)",
+        "huevo",
+        "nata (leche)",
+        "azúcar"
+      ],
+      "alergenos": [
+        "leche",
+        "gluten",
+        "huevo"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "agua-mineral",
+      "nombre": "Agua mineral",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 2.5,
+      "descripcion": "Agua mineral.",
+      "ingredientes": [
+        "agua mineral"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "refrescos",
+      "nombre": "Refrescos",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 3,
+      "descripcion": "Refresco de la selección de muestra; consulta las variedades con el personal.",
+      "ingredientes": [
+        "agua carbonatada",
+        "azúcar",
+        "aromas alimentarios"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [
+        "vegano",
+        "vegetariano"
+      ],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "cerveza-asahi",
+      "nombre": "Cerveza japonesa (Asahi)",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 4.5,
+      "descripcion": "Cerveza japonesa Asahi. Contiene alcohol.",
+      "ingredientes": [
+        "agua",
+        "malta de cebada",
+        "arroz",
+        "maíz",
+        "lúpulo",
+        "levadura"
+      ],
+      "alergenos": [
+        "gluten"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false
+    },
+    {
+      "id": "sake",
+      "nombre": "Sake (vaso)",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 5,
+      "descripcion": "Un vaso de sake. Contiene alcohol.",
+      "ingredientes": [
+        "arroz",
+        "agua",
+        "koji",
+        "levadura"
+      ],
+      "alergenos": [],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false,
+      "porcion": "1 vaso"
+    },
+    {
+      "id": "copa-vino",
+      "nombre": "Vino blanco / tinto (copa)",
+      "seccion": "Bebidas",
+      "categoria": "bebida",
+      "precio": 4.5,
+      "descripcion": "Copa de vino blanco o tinto. Contiene alcohol.",
+      "ingredientes": [
+        "uva",
+        "sulfitos"
+      ],
+      "alergenos": [
+        "sulfitos"
+      ],
+      "alergenos_verificados": false,
+      "dietas": [],
+      "picante": 0,
+      "disponible": true,
+      "imagen": null,
+      "imagen_alt": null,
+      "imagen_generada": false,
+      "porcion": "1 copa"
+    }
+  ]
+}
