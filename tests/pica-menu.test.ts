@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import data from '../public/demos/pica-pica/menu.json'
-import { restaurantAssetRoot, restaurantMenuPath, restaurantName } from '../src/services/restaurant'
+import { filterMenu, restaurantAssetRoot, restaurantMenuPath, restaurantName, type RestaurantMenu } from '../src/services/restaurant'
 
 describe('photographed Pica Pica menu', () => {
   it('retains all 37 photographed prices in source order across six sections', () => {
@@ -35,5 +35,11 @@ describe('photographed Pica Pica menu', () => {
     expect(restaurantMenuPath('ko')).toBe('/restaurantes/ko/menu.json')
     expect(restaurantMenuPath('vita')).toBe('/restaurantes/vita/menu.json')
     expect(() => restaurantMenuPath('../ko' as never)).toThrow('INVALID_RESTAURANT')
+  })
+
+  it('treats the photographed Tapas section as a deterministic menu filter', () => {
+    expect(filterMenu(data as RestaurantMenu, 'Recomiéndame tres tapas variadas').dishes.map(dish => dish.id)).toEqual([
+      'patates-braves', 'croquetes-casolanes', 'pebrots-padro', 'tires-pollastre', 'alberginia-mel',
+    ])
   })
 })

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { readFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import handler, { answerImages, menuImages } from '../api/chat'
+import handler, { answerImages, menuImages, verifiedRecommendationList } from '../api/chat'
 import type { RestaurantMenu } from '../src/services/restaurant'
 import fixture from './fixtures/menu.json'
 import picaData from '../public/demos/pica-pica/menu.json'
@@ -153,6 +153,14 @@ describe('restaurant chat function', () => {
       expect.objectContaining({ id: 'ko-nigiri', src: '/restaurantes/ko/images/nigiri.webp' }),
     ])
     expect(answerImages(ko, 'Tomate de temporada', 'ko')).toEqual([])
+  })
+
+  it('drops invented and excessive items from recommendation lists', () => {
+    const menu = { ...ko, platos: Array.from({ length: 5 }, (_, index) => ({ ...ko.platos[0], id: `dish-${index}`, nombre: `Plato ${index + 1}` })) }
+    const answer = menu.platos.map(dish => `- **${dish.nombre}** — 5 € · opción.`).concat('- **Plato inventado** — 4 € · opción.').join('\n')
+    const verified = verifiedRecommendationList(answer, menu.platos)
+    expect(verified).not.toContain('Plato inventado')
+    expect(verified.split('\n')).toHaveLength(4)
   })
 })
 

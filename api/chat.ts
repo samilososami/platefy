@@ -100,8 +100,22 @@ function sources(slug: RestaurantSlug) {
   if (!identity || menu.restaurante?.slug !== slug || !Array.isArray(menu.platos)) throw new Error('KNOWLEDGE_INVALID')
   return { identity, menu }
 }
+/** Remove invented or excessive dishes from Markdown recommendation lists. */
+export function verifiedRecommendationList(answer: string, allowedDishes: MenuDish[]) {
+  const allowed = new Set(allowedDishes.map(dish => normalize(dish.nombre)))
+  let listItems = 0
+  return answer.split('\n').filter(line => {
+    const item = line.match(/^\s*(?:[-*•]|\d+[.)])\s+(?:\*\*)?(.+?)(?:\*\*)?\s+[—–-]\s+/)
+    if (!item) return true
+    if (!allowed.has(normalize(item[1].trim()))) return false
+    listItems += 1
+    return listItems <= 4
+  }).join('\n').trim()
+}
 function validateAnswer(answer: string, filter: MenuFilterResult, menu: RestaurantMenu, language: string) {
-  const clean = answer.replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '').replace(/<think(?:ing)?>[\s\S]*$/gi, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim()
+  const stripped = answer.replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '').replace(/<think(?:ing)?>[\s\S]*$/gi, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim()
+  const allowed = filter.applied.length ? filter.dishes : menu.platos
+  const clean = verifiedRecommendationList(stripped, allowed)
   if (!clean || clean.length > 12_000) throw new Error('INVALID_MODEL_RESPONSE')
   if (filter.applied.length) {
     const allowed = new Set(filter.dishes.map(dish => dish.id)); const output = normalize(clean)

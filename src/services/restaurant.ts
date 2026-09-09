@@ -167,11 +167,11 @@ export function excludedAllergens(raw: string): string[] {
 function compactDish(dish: MenuDish) {
   return { id: dish.id, nombre: dish.nombre, categoria: dish.categoria, precio: dish.precio,
     descripcion: dish.descripcion, ingredientes: dish.ingredientes, alergenos: dish.alergenos,
-    dietas: dish.dietas, picante: dish.picante }
+    dietas: dish.dietas, picante: dish.picante, imagen_disponible: Boolean(dish.imagen) }
 }
 function leanDish(dish: MenuDish) {
   return { id: dish.id, nombre: dish.nombre, categoria: dish.categoria, precio: dish.precio,
-    alergenos: dish.alergenos, dietas: dish.dietas }
+    alergenos: dish.alergenos, dietas: dish.dietas, imagen_disponible: Boolean(dish.imagen) }
 }
 
 /** Deterministic filtering runs before the LLM, especially for allergen and budget requests. */
@@ -197,6 +197,9 @@ export function filterMenu(menu: RestaurantMenu, rawQuestion: string, previousUs
   const categoryAliases: Record<MenuCategory, string[]> = { entrante: ['entrante', 'starter', 'appetizer'], principal: ['principal', 'main'], postre: ['postre', 'dessert'], bebida: ['bebida', 'drink'] }
   const category = (Object.keys(categoryAliases) as MenuCategory[]).find(value => mentionsAny(question, categoryAliases[value]))
   if (category) applied.push(`categoria:${category}`)
+  const sections = [...new Set(menu.platos.map(dish => dish.seccion).filter((value): value is string => Boolean(value)))]
+  const section = sections.find(value => question.includes(normalize(value)))
+  if (section) applied.push(`seccion:${section}`)
 
   const named = menu.platos.filter(dish => {
     const name = normalize(dish.nombre)
@@ -213,6 +216,7 @@ export function filterMenu(menu: RestaurantMenu, rawQuestion: string, previousUs
     dishes = dishes.filter(dish => strict ? dish.precio < budget : dish.precio <= budget)
   }
   if (category) dishes = dishes.filter(dish => dish.categoria === category)
+  if (section) dishes = dishes.filter(dish => dish.seccion === section)
 
   if (!applied.length && named.length) dishes = named
   if (!applied.length && !named.length) {
@@ -243,6 +247,6 @@ export function getGroundedContext(knowledge: RestaurantKnowledge, question: str
   'CANDIDATOS_VERIFICADOS (fuente: menu.json):', JSON.stringify(candidates),
   filter.applied.length ? 'La selección anterior ya aplica las restricciones detectadas. Recomienda únicamente esos candidatos; si está vacía, indica que no hay coincidencias.'
     : 'Responde solo con los datos anteriores. Si la pregunta no trata sobre la carta, usa únicamente DATOS_DEL_RESTAURANTE.',
-  'Cuando recomiendes varios platos, elige como máximo cuatro. Escríbelos en una lista Markdown, una línea por plato, con este patrón: - **Nombre** — precio · motivo breve. No vuelques la carta completa ni encadenes nombres en un párrafo.'].join('\n\n')
+  'Cuando recomiendes varios platos, elige como máximo cuatro. Escríbelos en una lista Markdown, una línea por plato, con este patrón: - **Nombre** — precio · motivo breve. Usa el nombre exacto de CANDIDATOS_VERIFICADOS. Si hay opciones con imagen_disponible=true, prioriza al menos una para que la interfaz pueda enseñarla. No vuelques la carta completa ni encadenes nombres en un párrafo.'].join('\n\n')
   return { system, filter }
 }
