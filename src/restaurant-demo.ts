@@ -5,7 +5,6 @@ import './restaurant-demo.css';
 const section = document.querySelector<HTMLElement>('.restaurant-demo');
 const panel = document.querySelector<HTMLElement>('#demo-panel');
 const slot = document.querySelector<HTMLElement>('#demo-chat-slot');
-const chooser = document.querySelector<HTMLElement>('.demo-chooser');
 const mobileEntry = document.querySelector<HTMLButtonElement>('#demo-mobile-entry');
 const mobileQuery = window.matchMedia('(max-width: 700px)');
 const tabs = [...document.querySelectorAll<HTMLButtonElement>('.demo-tab')];
@@ -50,7 +49,6 @@ function openMobileDemo() {
   section?.classList.add('is-mobile-open');
   mobileEntry?.setAttribute('aria-expanded', 'true');
   if (!activated) { activated = true; mountChat(); }
-  window.requestAnimationFrame(() => chooser?.scrollTo({ left: Math.max(0, tabs[active].offsetLeft - (chooser.clientWidth - tabs[active].clientWidth) / 2), behavior: 'instant' }));
 }
 
 function choose(index: number, focus = false) {
@@ -67,10 +65,6 @@ function choose(index: number, focus = false) {
   if (story) story.textContent = c.stories[active];
   if (art) { art.src = restaurant.art; art.width = active === 2 ? 900 : 800; art.height = active === 2 ? 900 : 800; }
   if (focus) tabs[active]?.focus({ preventScroll: true });
-  if (chooser && window.matchMedia('(max-width: 700px)').matches) {
-    const tab = tabs[active];
-    chooser.scrollTo({ left: tab.offsetLeft - chooser.offsetLeft - (chooser.clientWidth - tab.clientWidth) / 2, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-  }
   if (changed && activated) mountChat();
 }
 
@@ -81,15 +75,6 @@ tabs.forEach((tab, index) => {
     if (next !== null) { event.preventDefault(); choose(next, true); }
   });
 });
-document.querySelectorAll<HTMLButtonElement>('[data-demo-step]').forEach(button => button.addEventListener('click', () => choose(active + Number(button.dataset.demoStep))));
-let touchX = 0;
-let touchY = 0;
-chooser?.addEventListener('touchstart', event => { touchX = event.changedTouches[0].clientX; touchY = event.changedTouches[0].clientY; }, { passive: true });
-chooser?.addEventListener('touchend', event => {
-  const dx = event.changedTouches[0].clientX - touchX;
-  const dy = event.changedTouches[0].clientY - touchY;
-  if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) choose(active + (dx < 0 ? 1 : -1));
-}, { passive: true });
 retry?.addEventListener('click', mountChat);
 mobileEntry?.addEventListener('click', openMobileDemo);
 window.addEventListener('message', event => {
