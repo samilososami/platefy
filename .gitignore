@@ -3,6 +3,7 @@ dist/
 work/
 .vercel/
 .env*
+!.env.example
 public/images/*.png
 
 # Generated HTML entries; reproducible from menu.json before dev/build.

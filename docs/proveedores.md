@@ -1,10 +1,10 @@
 # Proveedores y ejecución
 
-## Texto: Cloudflare Workers AI
+## Texto: Vercel AI Gateway
 
-El asistente se llama **platefy**. Usa [`@cf/qwen/qwen3-30b-a3b-fp8`](https://developers.cloudflare.com/workers-ai/models/qwen3-30b-a3b-fp8/) mediante un Worker con binding de Workers AI. Vercel conserva `CLOUDFLARE_WORKER_URL` y `CLOUDFLARE_WORKER_SECRET`; el Worker valida el secreto con `ORIGIN_SECRET`. Ninguna credencial de Cloudflare llega al navegador.
+El asistente se llama **platefy**. Usa [`google/gemini-2.5-flash`](https://vercel.com/ai-gateway/models/gemini-2.5-flash) mediante la API compatible con OpenAI de Vercel AI Gateway. Vercel conserva `AI_GATEWAY_API_KEY` como variable sensible de producción. La clave solo se lee dentro de `api/chat.ts` y nunca llega al navegador.
 
-`api/chat.ts` envía siempre `thinking: false`. No hay selector de razonamiento ni nombres de proveedores o modelos en la conversación. Las métricas técnicas del transporte no forman parte de la interfaz del comensal.
+`api/chat.ts` fija el modelo en el servidor y no acepta modelos ni configuración proporcionados por el navegador. No hay selector de razonamiento ni nombres de proveedores o modelos en la conversación. Las métricas técnicas del transporte no forman parte de la interfaz del comensal.
 
 ## Restaurantes y fuentes
 
@@ -25,7 +25,7 @@ El filtro determinista compartido en `src/services/restaurant.ts` selecciona can
 
 Las peticiones de fotografías se resuelven con datos del menú sin invocar el modelo. Los adjuntos solo admiten imágenes declaradas en el JSON y ubicadas bajo las rutas del mismo restaurante. El cliente vuelve a validar esas rutas antes de mostrarlas. No se usan URLs inventadas por el modelo ni se envían imágenes a inferencia.
 
-La Function limita tamaño, historial, duración, origen y solicitudes por instancia. Kō y Vita comparten actualmente la conexión y cuota de Workers AI. Para cuentas independientes por restaurante harían falta credenciales y límites persistentes separados; esta versión no los implementa.
+La Function limita tamaño, historial, duración, origen y solicitudes por instancia. Los tres restaurantes de muestra comparten actualmente la conexión y los créditos de Vercel AI Gateway. Para cuentas independientes por restaurante harían falta credenciales y límites persistentes separados; esta versión no los implementa.
 
 ## Voz
 

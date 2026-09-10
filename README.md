@@ -9,7 +9,7 @@ Sitio web de Platefy y demostración del asistente de IA para restaurantes.
 
 ## Desarrollo
 
-Requiere Node.js 24 y npm. Para usar el modelo, Vercel necesita `CLOUDFLARE_WORKER_URL` y el secreto `CLOUDFLARE_WORKER_SECRET`. Nunca se debe incluir el secreto en el repositorio.
+Requiere Node.js 24 y npm. Para usar el modelo, Vercel necesita `AI_GATEWAY_API_KEY` como variable sensible. Nunca se debe incluir la clave en el repositorio ni usar un prefijo público.
 
 ```sh
 ./run.sh install
@@ -22,11 +22,11 @@ Requiere Node.js 24 y npm. Para usar el modelo, Vercel necesita `CLOUDFLARE_WORK
 
 React 19, TypeScript y Vite. La compilación genera las entradas estáticas `/`, `/chatbot/` y `/settings/`; Vercel reescribe `/api/` a la pantalla de configuración y ejecuta `/api/chat` y `/api/status` como Functions. La interfaz está disponible en español, inglés y catalán, con diseño adaptable a móvil y escritorio.
 
-El chat usa `@cf/qwen/qwen3-30b-a3b-fp8` mediante Cloudflare Workers AI. La Function de Vercel se comunica con el Worker `platefy-ai-proxy` usando un secreto compartido que nunca llega al navegador. `/api/` muestra el estado y permite probar esta conexión.
+El chat usa `google/gemini-2.5-flash` mediante Vercel AI Gateway. La Function `/api/chat` autentica cada petición en el servidor con `AI_GATEWAY_API_KEY`; la clave nunca llega al navegador. `/api/` muestra el estado y permite probar esta conexión.
 
-Cada restaurante carga exclusivamente su `public/restaurantes/<slug>/menu.json` y la identidad compartida `public/platefy.md`. El agente se llama platefy. Solo se admiten `ko` y `vita`; el servidor selecciona la carta desde esa lista, nunca desde datos proporcionados por el navegador. La Function filtra alérgenos, dieta, categoría y presupuesto. Las fotos se resuelven desde rutas verificadas del mismo menú y se adjuntan al chat, sin visión ni URLs inventadas por el modelo. El pensamiento extendido está desactivado.
+Cada restaurante carga exclusivamente su `public/restaurantes/<slug>/menu.json` y la identidad compartida `public/platefy.md`. El agente se llama platefy. Solo se admiten `ko`, `vita` y `pica-pica`; el servidor selecciona la carta desde esa lista, nunca desde datos proporcionados por el navegador. La Function filtra alérgenos, dieta, categoría y presupuesto. Las fotos se resuelven desde rutas verificadas del mismo menú y se adjuntan al chat, sin visión ni URLs inventadas por el modelo. La interfaz no expone ni permite configurar el razonamiento.
 
-La voz española e inglesa se genera con Kokoro y la entrada hablada usa el reconocimiento del navegador. Las preguntas se procesan en Cloudflare Workers AI; si el usuario activa la voz, el texto de la respuesta también se envía a Kokoro. La voz catalana no está disponible en los proveedores verificados.
+La voz española e inglesa se genera con Kokoro y la entrada hablada usa el reconocimiento del navegador. Las preguntas se procesan mediante Vercel AI Gateway; si el usuario activa la voz, el texto de la respuesta también se envía a Kokoro. La voz catalana no está disponible en los proveedores verificados.
 
 La carta, los precios y los horarios de la demostración son ficticios. No se confirman reservas ni se ofrecen garantías sobre alérgenos. El historial permanece en memoria y desaparece al recargar; solo se conserva el idioma.
 

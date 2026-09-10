@@ -4,7 +4,7 @@
 
 La portada enlaza a `/restaurantes/`. Kō y Vita tienen una carta digital, un `menu.json` y un chat en `/restaurantes/<slug>/platefy/`. El acceso genérico `/chatbot/` redirige al directorio.
 
-Al abrir cada conversación se cargan `/platefy.md` y el menú de ese restaurante; la caché de conocimiento distingue ambos identificadores. Al enviar una pregunta, `/api/chat` valida `restaurant`, vuelve a leer las fuentes del servidor, filtra los datos pertinentes y llama a Cloudflare Workers AI con el razonamiento desactivado. La respuesta se valida antes de mostrarse. Las solicitudes de fotografías se resuelven directamente con los adjuntos del menú.
+Al abrir cada conversación se cargan `/platefy.md` y el menú de ese restaurante; la caché de conocimiento distingue ambos identificadores. Al enviar una pregunta, `/api/chat` valida `restaurant`, vuelve a leer las fuentes del servidor, filtra los datos pertinentes y llama a Gemini 2.5 Flash mediante Vercel AI Gateway. La respuesta se valida antes de mostrarse. Las solicitudes de fotografías se resuelven directamente con los adjuntos del menú.
 
 El asistente se presenta como platefy. La interfaz no expone el nombre del modelo, recuentos de referencias, controles de razonamiento ni un panel de métricas técnicas.
 

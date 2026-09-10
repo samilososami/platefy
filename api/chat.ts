@@ -8,9 +8,16 @@ export { filterMenu } from '../src/services/restaurant.js'
 type Request = IncomingMessage & { body?: unknown }
 type Response = ServerResponse & { status(code: number): Response; json(value: unknown): void }
 type Message = { role: 'user' | 'assistant'; content: string }
-type CloudflareResult = { content?: string; usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; neurons?: number }; model?: string; error?: string; detail?: string }
+type GatewayResult = {
+  choices?: Array<{ message?: { content?: string } }>
+  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
+  model?: string
+  error?: string | { message?: string }
+  detail?: string
+}
 
-const MODEL = '@cf/qwen/qwen3-30b-a3b-fp8'
+const MODEL = 'google/gemini-2.5-flash'
+const GATEWAY_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 const windows = new Map<string, { started: number; count: number }>()
 function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() }
 function locale(value: unknown) { const code = typeof value === 'string' ? value.toLowerCase().split('-')[0] : 'es'; return code === 'en' || code === 'ca' ? code : 'es' }
@@ -58,10 +65,10 @@ export function answerImages(menu: RestaurantMenu, answer: string, slug: Restaur
     .slice(0, 2)
 }
 
-function streamAnswer(response: Response, answer: string, images: DishImage[] = [], result?: CloudflareResult, providerMs?: number) {
+function streamAnswer(response: Response, answer: string, images: DishImage[] = [], result?: GatewayResult, providerMs?: number) {
   response.statusCode = 200; response.setHeader('Content-Type', 'text/event-stream; charset=utf-8'); response.setHeader('X-Accel-Buffering', 'no')
   for (const content of answer.match(/[\s\S]{1,180}/g) || [answer]) response.write(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
-  response.write(`data: ${JSON.stringify({ choices: [{ delta: {} }], platefy_images: images, usage: result?.usage, platefy_metrics: { provider_first_token_ms: providerMs ?? null, neurons: result?.usage?.neurons ?? null } })}\n\n`)
+  response.write(`data: ${JSON.stringify({ choices: [{ delta: {} }], platefy_images: images, usage: result?.usage, platefy_metrics: { provider_first_token_ms: providerMs ?? null } })}\n\n`)
   return response.end('data: [DONE]\n\n')
 }
 
@@ -130,7 +137,7 @@ function ensureAllergyNotice(answer: string, filter: MenuFilterResult, language:
 
 function upstreamError(status: number, detail = '') {
   if (status === 401 || status === 403) return { status: 503, message: 'The assistant connection requires attention.', reason: 'authentication' }
-  if (status === 429 || /neuron|quota|limit/i.test(detail)) return { status: 429, message: 'The assistant has reached its available quota.', reason: 'quota_unavailable' }
+  if (status === 402 || status === 429 || /credit|quota|limit|balance|budget/i.test(detail)) return { status: 429, message: 'The assistant has reached its available quota.', reason: 'quota_unavailable' }
   return { status: 503, message: 'The assistant is temporarily unavailable.', reason: 'provider' }
 }
 
@@ -172,21 +179,20 @@ export default async function handler(request: Request, response: Response) {
       }
       return streamAnswer(response, ensureAllergyNotice(answer, photos.filter, payload.locale), images)
     }
-    const workerUrl = process.env.CLOUDFLARE_WORKER_URL
-    const workerSecret = process.env.CLOUDFLARE_WORKER_SECRET
-    if (!workerUrl || !workerSecret) return response.status(503).json({ error: 'The assistant connection is not configured.' })
+    const gatewayKey = process.env.AI_GATEWAY_API_KEY
+    if (!gatewayKey) return response.status(503).json({ error: 'The assistant connection is not configured.' })
     const grounded = getGroundedContext(knowledge, question, priorUserQuestions(payload.messages, payload.allergies))
     const controller = new AbortController(); timeout = setTimeout(() => controller.abort(), 25_000)
     request.once('close', () => { if (!request.complete) controller.abort() })
     const upstreamStarted = performance.now()
-    const upstream = await fetch(workerUrl, {
+    const upstream = await fetch(GATEWAY_URL, {
       method: 'POST', signal: controller.signal,
-      headers: { Authorization: `Bearer ${workerSecret}`, 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...payload.messages.slice(0, -1), { role: 'user', content: question }], thinking: false }),
+      headers: { Authorization: `Bearer ${gatewayKey}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...payload.messages.slice(0, -1), { role: 'user', content: question }], temperature: 0.2, max_tokens: 700, stream: false }),
     })
     if (!upstream.ok) { const error = upstreamError(upstream.status, await upstream.text()); return response.status(error.status).json({ error: error.message, reason: error.reason }) }
-    const result = await upstream.json() as CloudflareResult
-    const verified = validateAnswer(result.content || '', grounded.filter, knowledge.menu, payload.locale)
+    const result = await upstream.json() as GatewayResult
+    const verified = validateAnswer(result.choices?.[0]?.message?.content || '', grounded.filter, knowledge.menu, payload.locale)
     const images = answerImages(knowledge.menu, verified, payload.restaurant)
     const providerMs = performance.now() - upstreamStarted
     return streamAnswer(response, verified, images, result, providerMs)

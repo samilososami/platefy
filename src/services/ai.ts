@@ -16,14 +16,13 @@ export interface InferenceMetrics {
   promptTokens: number | null
   completionTokens: number | null
   tokensPerSecond: number | null
-  neurons: number | null
   reasoning: 'off' | 'on'
 }
 
 export const MODEL_INFO = {
-  id: '@cf/qwen/qwen3-30b-a3b-fp8',
+  id: 'google/gemini-2.5-flash',
   name: 'platefy',
-  page: 'https://developers.cloudflare.com/workers-ai/models/qwen3-30b-a3b-fp8/',
+  page: 'https://vercel.com/ai-gateway/models/gemini-2.5-flash',
   thinking: false,
 } as const
 
@@ -67,11 +66,11 @@ function cleanPartialText(value: string) {
   return value.replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '').replace(/<think(?:ing)?>[\s\S]*$/gi, '').trim()
 }
 
-type CloudflareChunk = {
+type ChatStreamChunk = {
   choices?: Array<{ delta?: { content?: string; reasoning?: string } }>
   usage?: { prompt_tokens?: number; completion_tokens?: number }
   platefy_images?: DishImage[]
-  platefy_metrics?: { provider_first_token_ms?: number | null; neurons?: number | null }
+  platefy_metrics?: { provider_first_token_ms?: number | null }
 }
 
 async function responseError(response: Response): Promise<ProviderError> {
@@ -93,8 +92,7 @@ export async function generateReply(messages: ChatMessage[], locale: string, sig
   const startedAt = performance.now()
   let firstTokenMs: number | null = null
   let answer = ''
-  let usage: CloudflareChunk['usage']
-  let neurons: number | null = null
+  let usage: ChatStreamChunk['usage']
 
   try {
     const response = await fetch('/api/chat', {
@@ -115,8 +113,8 @@ export async function generateReply(messages: ChatMessage[], locale: string, sig
       const events = parser.push(done ? decoder.decode() : decoder.decode(value, { stream: true }), done)
       for (const event of events) {
         if (event.data === '[DONE]') continue
-        let chunk: CloudflareChunk
-        try { chunk = JSON.parse(event.data) as CloudflareChunk } catch { throw new ProviderError('INVALID_RESPONSE', 'The assistant returned malformed streaming data.') }
+        let chunk: ChatStreamChunk
+        try { chunk = JSON.parse(event.data) as ChatStreamChunk } catch { throw new ProviderError('INVALID_RESPONSE', 'The assistant returned malformed streaming data.') }
         const token = chunk.choices?.[0]?.delta?.content ?? ''
         if (token && firstTokenMs === null) firstTokenMs = performance.now() - startedAt
         if (token) { answer += token; const partial = cleanPartialText(answer); if (partial) onProgress?.(partial) }
@@ -130,7 +128,6 @@ export async function generateReply(messages: ChatMessage[], locale: string, sig
         }
         if (chunk.usage) usage = chunk.usage
         if (typeof chunk.platefy_metrics?.provider_first_token_ms === 'number') firstTokenMs = chunk.platefy_metrics.provider_first_token_ms
-        if (typeof chunk.platefy_metrics?.neurons === 'number') neurons = chunk.platefy_metrics.neurons
       }
       if (done) break
     }
@@ -139,10 +136,9 @@ export async function generateReply(messages: ChatMessage[], locale: string, sig
     const completionTokens = usage?.completion_tokens ?? null
     const generationSeconds = Math.max(responseMs / 1000, 0.001)
     publishMetrics({
-      model: MODEL_INFO.id, provider: 'Cloudflare Workers AI', responseMs, firstTokenMs,
+      model: MODEL_INFO.id, provider: 'Vercel AI Gateway', responseMs, firstTokenMs,
       promptTokens: usage?.prompt_tokens ?? null, completionTokens,
       tokensPerSecond: completionTokens === null || generationSeconds <= 0 ? null : completionTokens / generationSeconds,
-      neurons,
       reasoning: 'off',
     })
     publishStatus({ phase: 'ready', progress: 1, text: 'Aquí para ayudarte' })
