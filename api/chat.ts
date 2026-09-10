@@ -137,7 +137,8 @@ function ensureAllergyNotice(answer: string, filter: MenuFilterResult, language:
 
 function upstreamError(status: number, detail = '') {
   if (status === 401 || status === 403) return { status: 503, message: 'The assistant connection requires attention.', reason: 'authentication' }
-  if (status === 402 || status === 429 || /credit|quota|limit|balance|budget/i.test(detail)) return { status: 429, message: 'The assistant has reached its available quota.', reason: 'quota_unavailable' }
+  if (status === 402 || /credit|quota|balance|budget/i.test(detail)) return { status: 429, message: 'The assistant has reached its available quota.', reason: 'quota_unavailable' }
+  if (status === 429) return { status: 429, message: 'The assistant is receiving too many requests.', reason: 'rate_limited' }
   return { status: 503, message: 'The assistant is temporarily unavailable.', reason: 'provider' }
 }
 

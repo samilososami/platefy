@@ -128,6 +128,14 @@ describe('restaurant chat function', () => {
     expect(res.jsonBody).toEqual(expect.objectContaining({ reason: 'quota_unavailable' }))
   })
 
+  it('reports temporary gateway throttling as a rate limit', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new globalThis.Response(JSON.stringify({ error: 'Too many requests.' }), { status: 429 })))
+    const res = response()
+    await handler(request({ restaurant: 'ko', messages: [{ role: 'user', content: 'Hola' }] }, '127.0.0.53') as never, res as never)
+    expect(res.statusCode).toBe(429)
+    expect(res.jsonBody).toEqual(expect.objectContaining({ reason: 'rate_limited' }))
+  })
+
   it('serves verified photos without invoking inference', async () => {
     delete process.env.AI_GATEWAY_API_KEY
     const upstream = vi.fn(); vi.stubGlobal('fetch', upstream)
