@@ -188,7 +188,7 @@ export default async function handler(request: Request, response: Response) {
     const upstream = await fetch(GATEWAY_URL, {
       method: 'POST', signal: controller.signal,
       headers: { Authorization: `Bearer ${gatewayKey}`, 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...payload.messages.slice(0, -1), { role: 'user', content: question }], temperature: 0.2, max_tokens: 700, stream: false }),
+      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...payload.messages.slice(0, -1), { role: 'user', content: question }], temperature: 0.2, max_tokens: 700, stream: false, reasoning: { effort: 'none' } }),
     })
     if (!upstream.ok) { const error = upstreamError(upstream.status, await upstream.text()); return response.status(error.status).json({ error: error.message, reason: error.reason }) }
     const result = await upstream.json() as GatewayResult

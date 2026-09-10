@@ -52,7 +52,7 @@ function gatewayResult(answer: string) {
   }), { status: 200, headers: { 'Content-Type': 'application/json' } })
 }
 function upstreamBody(upstream: ReturnType<typeof vi.fn>) {
-  return JSON.parse(String((upstream.mock.calls[0][1] as RequestInit).body)) as { model: string; temperature: number; max_tokens: number; stream: boolean; messages: Array<{ content: string }> }
+  return JSON.parse(String((upstream.mock.calls[0][1] as RequestInit).body)) as { model: string; temperature: number; max_tokens: number; stream: boolean; reasoning: { effort: string }; messages: Array<{ content: string }> }
 }
 
 beforeEach(() => {
@@ -83,7 +83,7 @@ describe('restaurant chat function', () => {
     expect(upstream.mock.calls[0][0]).toBe(gatewayUrl)
     expect((init.headers as Record<string, string>).Authorization).toBe(`Bearer ${gatewayKey}`)
     const payload = upstreamBody(upstream)
-    expect(payload.model).toBe('google/gemini-2.5-flash'); expect(payload.stream).toBe(false)
+    expect(payload.model).toBe('google/gemini-2.5-flash'); expect(payload.stream).toBe(false); expect(payload.reasoning).toEqual({ effort: 'none' })
     expect(payload.messages[0].content).toContain('ko-nigiri')
     expect(payload.messages[0].content).not.toContain('vita-tomate')
     expect(vi.mocked(readFileSync).mock.calls.map(call => String(call[0]))).toEqual([
