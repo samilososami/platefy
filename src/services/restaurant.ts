@@ -186,7 +186,7 @@ function leanDish(dish: MenuDish) {
 }
 
 /** Deterministic filtering runs before the LLM, especially for allergen and budget requests. */
-export function filterMenu(menu: RestaurantMenu, rawQuestion: string, previousUserQuestions: string[] = []): MenuFilterResult {
+export function filterMenu(menu: RestaurantMenu, rawQuestion: string, previousUserQuestions: string[] = [], explicitCategoryOnly = false): MenuFilterResult {
   const question = normalize(rawQuestion)
   const applied: string[] = []
   const priorExclusions = previousUserQuestions.flatMap(excludedAllergens)
@@ -206,7 +206,8 @@ export function filterMenu(menu: RestaurantMenu, rawQuestion: string, previousUs
   if (budget !== null && Number.isFinite(budget)) applied.push(`precio_maximo:${budget}`)
 
   const categoryAliases: Record<MenuCategory, string[]> = { entrante: ['entrante', 'starter', 'appetizer'], principal: ['principal', 'main'], postre: ['postre', 'dessert'], bebida: ['bebida', 'drink'] }
-  const category = (Object.keys(categoryAliases) as MenuCategory[]).find(value => mentionsAny(question, categoryAliases[value]))
+  const mentionedCategory = (Object.keys(categoryAliases) as MenuCategory[]).find(value => mentionsAny(question, categoryAliases[value]))
+  const category = explicitCategoryOnly && !/(?:solo|solamente|unicamente|exclusivamente|only|just|nomes)\b/.test(question) ? undefined : mentionedCategory
   if (category) applied.push(`categoria:${category}`)
   const sections = [...new Set(menu.platos.map(dish => dish.seccion).filter((value): value is string => Boolean(value)))]
   const section = sections.find(value => {
@@ -280,7 +281,7 @@ export function buildGroupBudgetPlan(menu: RestaurantMenu, userMessages: string[
   ])
   if (!partySize || !budget || partySize < 1 || partySize > 30 || budget < 5 || budget > 2000) return null
 
-  const filter = filterMenu(menu, recent.join('. '))
+  const filter = filterMenu(menu, recent.join('. '), [], true)
   const available = (filter.applied.length ? filter.dishes : menu.platos).filter(dish => dish.disponible)
   if (!available.length) return { partySize, budget, total: 0, perPerson: 0, remaining: budget, lines: [], filter }
 
