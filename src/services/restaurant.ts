@@ -212,6 +212,7 @@ export function filterMenu(menu: RestaurantMenu, rawQuestion: string, previousUs
   const sections = [...new Set(menu.platos.map(dish => dish.seccion).filter((value): value is string => Boolean(value)))]
   const section = sections.find(value => {
     const label = normalize(value)
+    if (explicitCategoryOnly && !/(?:solo|solamente|unicamente|exclusivamente|only|just|nomes)\b/.test(question)) return false
     if (label === 'para compartir' && !/(?:seccion|apartado|section).{0,20}para compartir/.test(question)) return false
     return question.includes(label)
   })
