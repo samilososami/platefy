@@ -84,7 +84,7 @@ describe('restaurant chat function', () => {
     expect((init.headers as Record<string, string>).Authorization).toBe(`Bearer ${gatewayKey}`)
     const payload = upstreamBody(upstream)
     expect(payload.model).toBe('google/gemini-2.5-flash'); expect(payload.stream).toBe(true); expect(payload.stream_options).toEqual({ include_usage: true }); expect(payload.reasoning).toEqual({ effort: 'none' })
-    expect(payload.providerOptions.gateway.models).toEqual(['google/gemini-2.5-flash-lite'])
+    expect(payload.providerOptions.gateway.models).toEqual(['google/gemini-2.5-flash-lite', 'openai/gpt-oss-120b'])
     expect(payload.messages[0].content).toContain('ko-nigiri')
     expect(payload.messages[0].content).not.toContain('vita-tomate')
     expect(vi.mocked(readFileSync).mock.calls.map(call => String(call[0]))).toEqual([
