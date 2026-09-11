@@ -17,6 +17,7 @@ type GatewayResult = {
 }
 
 const MODEL = 'google/gemini-2.5-flash'
+const FALLBACK_MODEL = 'google/gemini-2.5-flash-lite'
 const GATEWAY_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 const windows = new Map<string, { started: number; count: number }>()
 function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() }
@@ -327,7 +328,7 @@ export default async function handler(request: Request, response: Response) {
     const upstream = await fetch(GATEWAY_URL, {
       method: 'POST', signal: controller.signal,
       headers: { Authorization: `Bearer ${gatewayKey}`, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...gatewayMessages(payload.messages)], temperature: 0.2, max_tokens: 700, stream: true, stream_options: { include_usage: true }, reasoning: { effort: 'none' } }),
+      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...gatewayMessages(payload.messages)], temperature: 0.2, max_tokens: 700, stream: true, stream_options: { include_usage: true }, reasoning: { effort: 'none' }, providerOptions: { gateway: { models: [FALLBACK_MODEL] } } }),
     })
     if (!upstream.ok) {
       const detail = await upstream.text()

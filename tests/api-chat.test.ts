@@ -52,7 +52,7 @@ function gatewayResult(answer: string) {
   return new globalThis.Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } })
 }
 function upstreamBody(upstream: ReturnType<typeof vi.fn>) {
-  return JSON.parse(String((upstream.mock.calls[0][1] as RequestInit).body)) as { model: string; temperature: number; max_tokens: number; stream: boolean; stream_options: { include_usage: boolean }; reasoning: { effort: string }; messages: Array<{ role: string; content: string }> }
+  return JSON.parse(String((upstream.mock.calls[0][1] as RequestInit).body)) as { model: string; temperature: number; max_tokens: number; stream: boolean; stream_options: { include_usage: boolean }; reasoning: { effort: string }; providerOptions: { gateway: { models: string[] } }; messages: Array<{ role: string; content: string }> }
 }
 
 beforeEach(() => {
@@ -84,6 +84,7 @@ describe('restaurant chat function', () => {
     expect((init.headers as Record<string, string>).Authorization).toBe(`Bearer ${gatewayKey}`)
     const payload = upstreamBody(upstream)
     expect(payload.model).toBe('google/gemini-2.5-flash'); expect(payload.stream).toBe(true); expect(payload.stream_options).toEqual({ include_usage: true }); expect(payload.reasoning).toEqual({ effort: 'none' })
+    expect(payload.providerOptions.gateway.models).toEqual(['google/gemini-2.5-flash-lite'])
     expect(payload.messages[0].content).toContain('ko-nigiri')
     expect(payload.messages[0].content).not.toContain('vita-tomate')
     expect(vi.mocked(readFileSync).mock.calls.map(call => String(call[0]))).toEqual([
