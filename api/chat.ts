@@ -1,15 +1,15 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { ALLERGEN_IDS, buildGroupBudgetPlan, excludedAllergens, filterMenu, formatGroupBudgetPlan, getGroundedContext, isRestaurantSlug, restaurantLocale, restaurantMenuPath, safeDishImage, type RestaurantSlug, type RestaurantMenu, type MenuFilterResult, type DishImage, type MenuDish } from '../src/services/restaurant.js'
+import { ALLERGEN_IDS, buildGroupBudgetPlan, classifyRestaurantIntent, excludedAllergens, filterMenu, formatGroupBudgetPlan, getGroundedContext, isRestaurantSlug, restaurantLocale, restaurantMenuPath, safeDishImage, type RestaurantSlug, type RestaurantMenu, type MenuFilterResult, type DishImage, type MenuDish } from '../src/services/restaurant.js'
 
 export { filterMenu } from '../src/services/restaurant.js'
 
 type Request = IncomingMessage & { body?: unknown }
-type Response = ServerResponse & { status(code: number): Response; json(value: unknown): void }
+type Response = ServerResponse & { status(code: number): Response; json(value: unknown): void; flushHeaders?(): void }
 type Message = { role: 'user' | 'assistant'; content: string }
 type GatewayResult = {
-  choices?: Array<{ message?: { content?: string } }>
+  choices?: Array<{ delta?: { content?: string } }>
   usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
   model?: string
   error?: string | { message?: string }
@@ -66,10 +66,140 @@ export function answerImages(menu: RestaurantMenu, answer: string, slug: Restaur
 }
 
 function streamAnswer(response: Response, answer: string, images: DishImage[] = [], result?: GatewayResult, providerMs?: number) {
-  response.statusCode = 200; response.setHeader('Content-Type', 'text/event-stream; charset=utf-8'); response.setHeader('X-Accel-Buffering', 'no')
+  response.statusCode = 200; response.setHeader('Content-Type', 'text/event-stream; charset=utf-8'); response.setHeader('X-Accel-Buffering', 'no'); response.flushHeaders?.()
   for (const content of answer.match(/[\s\S]{1,180}/g) || [answer]) response.write(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
   response.write(`data: ${JSON.stringify({ choices: [{ delta: {} }], platefy_images: images, usage: result?.usage, platefy_metrics: { provider_first_token_ms: providerMs ?? null } })}\n\n`)
   return response.end('data: [DONE]\n\n')
+}
+
+function conversationalReply(menu: RestaurantMenu, language: string, intent: 'greeting' | 'off-topic') {
+  const name = menu.restaurante.nombre
+  const featured = menu.platos.find(dish => dish.disponible && /edamame|brav|tomate|croquet/.test(normalize(dish.nombre)))
+    || menu.platos.find(dish => dish.disponible && dish.categoria !== 'bebida')
+  if (intent === 'greeting') {
+    if (language === 'en') return `Hello! Welcome to ${name}. I know this menu down to the last ingredient: I can recommend dishes, work to a budget or check allergens. What are you in the mood for?`
+    if (language === 'ca') return `Hola! Benvingut a ${name}. Conec aquesta carta fins a l’últim ingredient: puc recomanar-te plats, ajustar un pressupost o revisar al·lèrgens. Què et ve de gust?`
+    return `¡Hola! Bienvenido a ${name}. Conozco esta carta hasta el último ingrediente: puedo recomendarte platos, ajustar un presupuesto o revisar alérgenos. ¿Qué te apetece?`
+  }
+  if (!featured) return language === 'en' ? `That is beyond my menu expertise, but I can help you choose what to eat at ${name}.`
+    : language === 'ca' ? `Això em queda fora de carta, però sí que puc ajudar-te a triar què menjar a ${name}.`
+      : `Eso me pilla fuera de carta, pero sí puedo ayudarte a elegir qué comer en ${name}.`
+  if (language === 'en') return `That is beyond my menu expertise — my history degree is still in the kitchen. I can tell you about **${featured.nombre}**, though: ${featured.descripcion} Want a recommendation?`
+  if (language === 'ca') return `Això em queda fora de carta — el meu títol d’història encara és a cuina. Però sí que et puc parlar de **${featured.nombre}**: ${featured.descripcion} Vols una recomanació?`
+  return `Eso me pilla fuera de carta — mi título de Historia sigue en cocina. Pero sí puedo hablarte de **${featured.nombre}**: ${featured.descripcion} ¿Te recomiendo algo?`
+}
+
+/** Keep history only for turns that explicitly depend on it. */
+function gatewayMessages(messages: Message[]): Message[] {
+  const current = normalize(messages[messages.length - 1].content).trim()
+  const contextual = /^(?:y\b|pero\b|ademas\b|tambien\b|entonces\b|eso\b|esa\b|ese\b|estos?\b|estas?\b|otra?\b|mejor\b|cual de|cuanto cuesta|que lleva|como se ve|what about|and\b|but\b|that\b|those\b|another\b|which one|how much|what does it|i si\b|pero\b|aixo\b|aquest|aquesta|una altra|quant costa|que porta)/.test(current)
+  return contextual ? messages.slice(-5) : [messages[messages.length - 1]]
+}
+
+async function streamGateway(response: Response, upstream: globalThis.Response, menu: RestaurantMenu, filter: MenuFilterResult, language: string, slug: RestaurantSlug, startedAt: number) {
+  if (!upstream.body) throw new Error('INVALID_MODEL_RESPONSE')
+  response.statusCode = 200
+  response.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  response.setHeader('X-Accel-Buffering', 'no')
+  response.flushHeaders?.()
+  const reader = upstream.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let answer = ''
+  let usage: GatewayResult['usage']
+  let firstTokenMs: number | null = null
+  let lineMode: 'unknown' | 'prose' | 'list' = 'unknown'
+  let heldLine = ''
+  let listItems = 0
+  const allowedNames = new Set((filter.applied.length ? filter.dishes : menu.platos).map(dish => normalize(dish.nombre)))
+
+  const visibleText = (content: string, final = false) => {
+    let visible = ''
+    const flushList = (newline: boolean) => {
+      const item = heldLine.match(/^\s*(?:[-*•]|\d+[.)])\s+(?:\*\*)?(.+?)(?:\*\*)?\s+[—–-]\s+/)
+      if (item && allowedNames.has(normalize(item[1].trim())) && listItems < 4) { visible += heldLine; listItems += 1 }
+      if (newline && visible && !visible.endsWith('\n')) visible += '\n'
+      heldLine = ''; lineMode = 'unknown'
+    }
+    for (const character of content) {
+      if (character === '\n') {
+        if (lineMode === 'list') flushList(true)
+        else { visible += heldLine + '\n'; heldLine = ''; lineMode = 'unknown' }
+        continue
+      }
+      if (lineMode === 'prose') { visible += character; continue }
+      heldLine += character
+      if (lineMode === 'list') continue
+      const trimmed = heldLine.trimStart()
+      if (!trimmed) continue
+      if (/^[-*•]/.test(trimmed)) { lineMode = 'list'; continue }
+      if (/^\d/.test(trimmed) && !/^\d+[^\d.)]/.test(trimmed)) {
+        if (/^\d+[.)]/.test(trimmed)) lineMode = 'list'
+        continue
+      }
+      lineMode = 'prose'; visible += heldLine; heldLine = ''
+    }
+    if (final) {
+      if (lineMode === 'list') flushList(false)
+      else visible += heldLine
+      heldLine = ''; lineMode = 'unknown'
+    }
+    return visible
+  }
+
+  const emitEvent = (event: string) => {
+    for (const line of event.split('\n')) {
+      if (!line.startsWith('data:')) continue
+      const data = line.slice(5).trim()
+      if (!data || data === '[DONE]') continue
+      let chunk: GatewayResult
+      try { chunk = JSON.parse(data) as GatewayResult } catch { continue }
+      const token = chunk.choices?.[0]?.delta?.content || ''
+      const visible = visibleText(token)
+      if (visible) {
+        if (firstTokenMs === null) firstTokenMs = performance.now() - startedAt
+        answer += visible
+        response.write(`data: ${JSON.stringify({ choices: [{ delta: { content: visible } }] })}\n\n`)
+      }
+      if (chunk.usage) usage = chunk.usage
+    }
+  }
+
+  while (true) {
+    const { done, value } = await reader.read()
+    buffer += done ? decoder.decode() : decoder.decode(value, { stream: true })
+    buffer = buffer.replace(/\r\n/g, '\n')
+    let boundary = buffer.indexOf('\n\n')
+    while (boundary >= 0) {
+      emitEvent(buffer.slice(0, boundary))
+      buffer = buffer.slice(boundary + 2)
+      boundary = buffer.indexOf('\n\n')
+    }
+    if (done) break
+  }
+  if (buffer.trim()) emitEvent(buffer)
+  const trailing = visibleText('', true)
+  if (trailing) {
+    if (firstTokenMs === null) firstTokenMs = performance.now() - startedAt
+    answer += trailing
+    response.write(`data: ${JSON.stringify({ choices: [{ delta: { content: trailing } }] })}\n\n`)
+  }
+  if (!answer.trim()) {
+    const fallback = groundedFallback(menu, filter, language)
+    for (const content of fallback.match(/[\s\S]{1,180}/g) || [fallback]) {
+      answer += content
+      response.write(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
+    }
+  }
+  const withNotice = ensureAllergyNotice(answer, filter, language)
+  if (withNotice.length > answer.length) {
+    const content = withNotice.slice(answer.length)
+    answer = withNotice
+    response.write(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
+  }
+  const images = answerImages(menu, answer, slug)
+  response.write(`data: ${JSON.stringify({ choices: [{ delta: {} }], platefy_images: images, usage, platefy_metrics: { provider_first_token_ms: firstTokenMs } })}\n\n`)
+  response.end('data: [DONE]\n\n')
 }
 
 function clientIp(request: Request) { const value = request.headers['x-forwarded-for']; return (Array.isArray(value) ? value[0] : value?.split(',')[0])?.trim() || request.socket.remoteAddress || 'unknown' }
@@ -119,17 +249,6 @@ export function verifiedRecommendationList(answer: string, allowedDishes: MenuDi
     return listItems <= 4
   }).join('\n').trim()
 }
-function validateAnswer(answer: string, filter: MenuFilterResult, menu: RestaurantMenu, language: string) {
-  const stripped = answer.replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '').replace(/<think(?:ing)?>[\s\S]*$/gi, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim()
-  const allowed = filter.applied.length ? filter.dishes : menu.platos
-  const clean = verifiedRecommendationList(stripped, allowed)
-  if (!clean || clean.length > 12_000) throw new Error('INVALID_MODEL_RESPONSE')
-  if (filter.applied.length) {
-    const allowed = new Set(filter.dishes.map(dish => dish.id)); const output = normalize(clean)
-    if (menu.platos.some(dish => output.includes(normalize(dish.nombre)) && !allowed.has(dish.id))) throw new Error('UNGROUNDED_DISH')
-  }
-  return ensureAllergyNotice(clean, filter, language)
-}
 function ensureAllergyNotice(answer: string, filter: MenuFilterResult, language: string) {
   if (!filter.isSafetyQuestion || /(?:confirm|consulta|check)[\s\S]{0,100}(?:personal|equipo|restaurant|staff|team)/i.test(answer)) return answer
   return answer + (language === 'en' ? '\n\nPlease confirm ingredients, traces and cross-contamination with the restaurant team.' : language === 'ca' ? '\n\nConfirma els ingredients, les traces i la contaminació creuada amb l’equip del restaurant.' : '\n\nConfirma los ingredientes, las trazas y la contaminación cruzada con el equipo del restaurante.')
@@ -160,6 +279,11 @@ export default async function handler(request: Request, response: Response) {
     const payload = sanitize(await readBody(request))
     const knowledge = sources(payload.restaurant)
     const question = payload.messages[payload.messages.length - 1].content
+    const intent = classifyRestaurantIntent(knowledge.menu, question)
+    if (intent === 'greeting' || intent === 'off-topic') {
+      const answer = conversationalReply(knowledge.menu, payload.locale, intent)
+      return streamAnswer(response, answer, intent === 'off-topic' ? answerImages(knowledge.menu, answer, payload.restaurant) : [])
+    }
     const photos = imageSelection(knowledge.menu, payload.messages, payload.restaurant, payload.allergies)
     if (photos !== null) {
       const images = photos.images
@@ -202,8 +326,8 @@ export default async function handler(request: Request, response: Response) {
     const upstreamStarted = performance.now()
     const upstream = await fetch(GATEWAY_URL, {
       method: 'POST', signal: controller.signal,
-      headers: { Authorization: `Bearer ${gatewayKey}`, 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...payload.messages.slice(0, -1), { role: 'user', content: question }], temperature: 0.2, max_tokens: 700, stream: false, reasoning: { effort: 'none' } }),
+      headers: { Authorization: `Bearer ${gatewayKey}`, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...gatewayMessages(payload.messages)], temperature: 0.2, max_tokens: 700, stream: true, stream_options: { include_usage: true }, reasoning: { effort: 'none' } }),
     })
     if (!upstream.ok) {
       const detail = await upstream.text()
@@ -214,11 +338,7 @@ export default async function handler(request: Request, response: Response) {
       const error = upstreamError(upstream.status, detail)
       return response.status(error.status).json({ error: error.message, reason: error.reason })
     }
-    const result = await upstream.json() as GatewayResult
-    const verified = validateAnswer(result.choices?.[0]?.message?.content || '', grounded.filter, knowledge.menu, payload.locale)
-    const images = answerImages(knowledge.menu, verified, payload.restaurant)
-    const providerMs = performance.now() - upstreamStarted
-    return streamAnswer(response, verified, images, result, providerMs)
+    return await streamGateway(response, upstream, knowledge.menu, grounded.filter, payload.locale, payload.restaurant, upstreamStarted)
   } catch (error) {
     if (response.headersSent) return response.end()
     const message = error instanceof Error ? error.message : ''

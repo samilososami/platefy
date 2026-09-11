@@ -60,6 +60,8 @@ export interface GroupBudgetPlan {
   filter: MenuFilterResult
 }
 
+export type RestaurantChatIntent = 'greeting' | 'restaurant' | 'off-topic'
+
 const IDENTITY_URL = '/platefy.md'
 const knowledgePromises = new Map<RestaurantSlug, Promise<RestaurantKnowledge>>()
 
@@ -137,6 +139,23 @@ export function restaurantLocale(locale: string): RestaurantLocale {
 
 function normalize(value: string): string {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+}
+
+/** Classify only the current turn so an old request cannot hijack a new topic. */
+export function classifyRestaurantIntent(menu: RestaurantMenu, rawQuestion: string): RestaurantChatIntent {
+  const question = normalize(rawQuestion).replace(/[¿?¡!.,;:]+/g, ' ').replace(/\s+/g, ' ').trim()
+  if (/^(?:hola|buenas|buenos dias|buenas tardes|buenas noches|hey|hello|hi|ei|ey|que tal|com va|bon dia|bona tarda)(?:\s+(?:platefy|a todos|que tal))?$/.test(question)) return 'greeting'
+
+  const restaurantWords = /\b(?:menu|carta|restaurante|plato|platos|comida|comer|cenar|cena|almorzar|tapa|tapas|entrante|principal|postre|bebida|precio|cuesta|euros|ingrediente|alerg|intoler|vegano|vegetariano|carne|pescado|marisco|picante|reserva|reservar|horario|direccion|telefono|recom|suger|pedir|pedido|apetece|hambre|foto|imagen|menu|restaurant|dish|food|eat|dinner|lunch|starter|dessert|drink|price|ingredient|allerg|booking|hours|recommend|suggest|order|photo|image|menjar|sopar|plat|preu|ingredient|reserva|horari|recoman)\w*\b/
+  if (restaurantWords.test(question)) return 'restaurant'
+
+  const menuVocabulary = menu.platos.flatMap(dish => [dish.nombre, ...dish.ingredientes])
+    .flatMap(value => normalize(value).split(/[^a-z0-9]+/)).filter(word => word.length >= 5)
+  if ([...new Set(menuVocabulary)].some(word => new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(question))) return 'restaurant'
+
+  const offTopicRequest = /\b(?:describe|explica|cuentame|hablame|resume|define|quien fue|que fue|que es|historia de|write|explain|tell me|summarize|who was|what is|descriu|explica|parla.?m|qui va ser|que va ser)\b/
+  const offTopicSubject = /\b(?:guerra|wwi+|world war|imperio|revolucion|historia|politica|presidente|rey|futbol|football|champions|programacion|codigo|javascript|python|fisica|quimica|matematic|clima|weather|pelicula|musica|bitcoin|criptomoneda)\w*\b/
+  return offTopicRequest.test(question) || offTopicSubject.test(question) ? 'off-topic' : 'restaurant'
 }
 
 const allergenTerms: Record<string, string[]> = {
@@ -268,8 +287,14 @@ function spreadByPrice(dishes: MenuDish[], count: number): MenuDish[] {
 /** Build an exact, menu-grounded group order close to a stated total budget. */
 export function buildGroupBudgetPlan(menu: RestaurantMenu, userMessages: string[]): GroupBudgetPlan | null {
   const recent = userMessages.slice(-4)
-  const context = normalize(recent.join('. '))
-  if (!/(?:recom|suger|pedir|comer|cenar|cena|carta|menu|platos|tapas|pedido|elegir|escoger|pressupost|presupuesto|budget|suggest|order|meal|dinner|eat|menjar|triar|acerca|aproxim|llega|alcanza|close|near)/.test(context)) return null
+  const current = normalize(recent[recent.length - 1] || '')
+  const earlier = normalize(recent.slice(0, -1).join('. '))
+  const directRequest = /(?:recom|suger|pedir|comer|cenar|cena|carta|menu|platos|tapas|pedido|elegir|escoger|pressupost|presupuesto|budget|suggest|order|meal|dinner|eat|menjar|triar)/.test(current)
+    && /(?:\d{1,2}\s*(?:personas?|persones?|comensales?|comensals?|people|diners?)|(?:somos|seremos|eramos|para|per|for|party of)\s*\d{1,2})/.test(current)
+    && /(?:presupuesto|pressupost|budget|\d+(?:[.,]\d+)?\s*(?:€|euros?|eur))/.test(current)
+  const explicitContinuation = /(?:recalcul|reajust|ajust|acerca|aproxim|no (?:llega|alcanza)|sigue siendo|cantidades|usa mejor|nowhere near|try again|torna.?ho|aixo|eso|that|podemos subir|nuevo presupuesto|new budget|y si somos|what if)/.test(current)
+    && /(?:personas?|persones?|people|diners?|comensales?|presupuesto|pressupost|budget|\d+\s*(?:€|euros?|eur))/.test(earlier)
+  if (!directRequest && !explicitContinuation) return null
   const partySize = latestNumber(recent, [
     /\b(?:somos|seremos|eramos|para|mesa (?:de|para)|grupo de|som|serem|per|for|party of)\s*(\d{1,2})\s*(?:personas?|persones?|comensales?|comensals?|people|diners?)?/,
     /\b(\d{1,2})\s*(?:personas?|persones?|comensales?|comensals?|people|diners?)\b/,

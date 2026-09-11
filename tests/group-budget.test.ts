@@ -66,4 +66,14 @@ describe('30 medium and complex group-budget conversations', () => {
     expect(answer).toContain(plan!.lines[0].dish.nombre)
     expect(answer).toMatch(/Total orientativo|Total orientatiu|Estimated total/)
   })
+
+  it.each(['Hola', 'Descríbeme la Segunda Guerra Mundial', '¿Qué tiempo hace mañana?'])(
+    'does not revive a previous plan for a new turn: %s', current => {
+      const plan = buildGroupBudgetPlan(menus.ko, [
+        'Somos 5 personas y tenemos un presupuesto de 180 euros. Recomiéndanos una cena.',
+        current,
+      ])
+      expect(plan).toBeNull()
+    },
+  )
 })
