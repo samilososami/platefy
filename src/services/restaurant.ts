@@ -49,6 +49,17 @@ export interface MenuFilterResult { dishes: MenuDish[]; isSafetyQuestion: boolea
 
 export interface DishImage { id: string; nombre: string; src: string; alt: string }
 
+export interface GroupBudgetPlanLine { dish: MenuDish; quantity: number; subtotal: number }
+export interface GroupBudgetPlan {
+  partySize: number
+  budget: number
+  total: number
+  perPerson: number
+  remaining: number
+  lines: GroupBudgetPlanLine[]
+  filter: MenuFilterResult
+}
+
 const IDENTITY_URL = '/platefy.md'
 const knowledgePromises = new Map<RestaurantSlug, Promise<RestaurantKnowledge>>()
 
@@ -198,7 +209,11 @@ export function filterMenu(menu: RestaurantMenu, rawQuestion: string, previousUs
   const category = (Object.keys(categoryAliases) as MenuCategory[]).find(value => mentionsAny(question, categoryAliases[value]))
   if (category) applied.push(`categoria:${category}`)
   const sections = [...new Set(menu.platos.map(dish => dish.seccion).filter((value): value is string => Boolean(value)))]
-  const section = sections.find(value => question.includes(normalize(value)))
+  const section = sections.find(value => {
+    const label = normalize(value)
+    if (label === 'para compartir' && !/(?:seccion|apartado|section).{0,20}para compartir/.test(question)) return false
+    return question.includes(label)
+  })
   if (section) applied.push(`seccion:${section}`)
 
   const named = menu.platos.filter(dish => {
@@ -228,6 +243,89 @@ export function filterMenu(menu: RestaurantMenu, rawQuestion: string, previousUs
     if (relevant.length) dishes = relevant
   }
   return { dishes, isSafetyQuestion: safetyWords, applied }
+}
+
+function latestNumber(messages: string[], patterns: RegExp[]): number | null {
+  for (const message of [...messages].reverse()) {
+    const text = normalize(message)
+    for (const pattern of patterns) {
+      const match = text.match(pattern)
+      if (match) return Number(match[1].replace(',', '.'))
+    }
+  }
+  return null
+}
+
+function spreadByPrice(dishes: MenuDish[], count: number): MenuDish[] {
+  const sorted = [...dishes].sort((a, b) => a.precio - b.precio || a.nombre.localeCompare(b.nombre))
+  if (sorted.length <= count) return sorted
+  if (count === 1) return [sorted[Math.floor(sorted.length / 2)]]
+  return Array.from({ length: count }, (_, index) => sorted[Math.round(index * (sorted.length - 1) / (count - 1))])
+}
+
+/** Build an exact, menu-grounded group order close to a stated total budget. */
+export function buildGroupBudgetPlan(menu: RestaurantMenu, userMessages: string[]): GroupBudgetPlan | null {
+  const recent = userMessages.slice(-4)
+  const context = normalize(recent.join('. '))
+  if (!/(?:recom|suger|pedir|comer|cenar|cena|carta|menu|platos|tapas|pedido|elegir|escoger|pressupost|presupuesto|budget|suggest|order|meal|dinner|eat|menjar|triar|acerca|aproxim|llega|alcanza|close|near)/.test(context)) return null
+  const partySize = latestNumber(recent, [
+    /\b(?:somos|seremos|eramos|para|mesa (?:de|para)|grupo de|som|serem|per|for|party of)\s*(\d{1,2})\s*(?:personas?|persones?|comensales?|comensals?|people|diners?)?/,
+    /\b(\d{1,2})\s*(?:personas?|persones?|comensales?|comensals?|people|diners?)\b/,
+  ])
+  const budget = latestNumber(recent, [
+    /\b(?:presupuesto|pressupost|budget)(?:\s+(?:total|maximo|maximum))?\s*(?:de|d|of|es|a|:)??\s*(\d+(?:[.,]\d+)?)\s*(?:€|euros?|eur)?/,
+    /\b(?:tenemos|teniamos|tenim|disponemos de|disposem de|contamos con|con|amb|spend)\s*(?:un\s+)?(?:presupuesto\s+de\s+)?(\d+(?:[.,]\d+)?)\s*(?:€|euros?|eur)\b/,
+    /\b(\d+(?:[.,]\d+)?)\s*(?:€|euros?|eur)\b.{0,24}\b(?:presupuesto|pressupost|budget)\b/,
+    /\b(?:acerca|aproxim|llega|alcanza|close|near)\w*\s*(?:a|to)?\s*(\d+(?:[.,]\d+)?)\b/,
+  ])
+  if (!partySize || !budget || partySize < 1 || partySize > 30 || budget < 5 || budget > 2000) return null
+
+  const filter = filterMenu(menu, recent.join('. '))
+  const available = (filter.applied.length ? filter.dishes : menu.platos).filter(dish => dish.disponible)
+  if (!available.length) return { partySize, budget, total: 0, perPerson: 0, remaining: budget, lines: [], filter }
+
+  const quotas: Record<MenuCategory, number> = { entrante: 2, principal: 3, postre: 1, bebida: 2 }
+  const selected = (Object.keys(quotas) as MenuCategory[]).flatMap(category => spreadByPrice(available.filter(dish => dish.categoria === category), quotas[category]))
+  const candidates = (selected.length >= Math.min(4, available.length) ? selected : spreadByPrice(available, 8)).slice(0, 8)
+  const targetCents = Math.floor(budget * 97)
+  const budgetCents = Math.round(budget * 100)
+  const prices = candidates.map(dish => Math.round(dish.precio * 100))
+  const maximums = candidates.map(() => partySize)
+  const quantities = Array(candidates.length).fill(0) as number[]
+  let cost = 0
+  for (const index of candidates.map((_, index) => index).sort((a, b) => prices[a] - prices[b])) {
+    if (cost + prices[index] <= budgetCents) { quantities[index] = 1; cost += prices[index] }
+  }
+  while (true) {
+    const choices = candidates.map((_, index) => index).filter(index => quantities[index] < maximums[index] && cost + prices[index] <= budgetCents)
+    if (!choices.length) break
+    choices.sort((a, b) => quantities[a] - quantities[b] || Math.abs(targetCents - (cost + prices[a])) - Math.abs(targetCents - (cost + prices[b])) || prices[b] - prices[a])
+    const next = choices[0]
+    if (cost >= targetCents && Math.abs(targetCents - (cost + prices[next])) >= Math.abs(targetCents - cost)) break
+    quantities[next] += 1; cost += prices[next]
+  }
+  const lines = quantities.flatMap((quantity, index) => quantity ? [{ dish: candidates[index], quantity, subtotal: Math.round(candidates[index].precio * quantity * 100) / 100 }] : [])
+  const total = Math.round(cost) / 100
+  return { partySize, budget, total, perPerson: Math.round(total / partySize * 100) / 100, remaining: Math.round((budget - total) * 100) / 100, lines, filter }
+}
+
+export function formatGroupBudgetPlan(plan: GroupBudgetPlan, language: RestaurantLocale): string {
+  const locale = language === 'ca' ? 'ca-ES' : language === 'en' ? 'en-GB' : 'es-ES'
+  const money = new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' })
+  if (!plan.lines.length) return language === 'en' ? `I couldn't find a combination compatible with your requirements for ${plan.partySize} people.` : language === 'ca' ? `No he trobat una combinació compatible amb els requisits per a ${plan.partySize} persones.` : `No he encontrado una combinación compatible con los requisitos para ${plan.partySize} personas.`
+  const intro = language === 'en'
+    ? `For ${plan.partySize} people and a total budget of ${money.format(plan.budget)}, this menu-grounded proposal gets close without exceeding it:`
+    : language === 'ca'
+      ? `Per a ${plan.partySize} persones i un pressupost total de ${money.format(plan.budget)}, aquesta proposta s’hi acosta sense superar-lo:`
+      : `Para ${plan.partySize} personas y un presupuesto total de ${money.format(plan.budget)}, esta propuesta se acerca sin superarlo:`
+  const lines = plan.lines.map(({ dish, quantity, subtotal }) => `- **${dish.nombre}** — ${quantity} × ${money.format(dish.precio)} = ${money.format(subtotal)} · ${dish.descripcion}`)
+  const total = language === 'en'
+    ? `**Estimated total: ${money.format(plan.total)}** (${money.format(plan.perPerson)} per person). ${money.format(plan.remaining)} remains.`
+    : language === 'ca'
+      ? `**Total orientatiu: ${money.format(plan.total)}** (${money.format(plan.perPerson)} per persona). Queden ${money.format(plan.remaining)}.`
+      : `**Total orientativo: ${money.format(plan.total)}** (${money.format(plan.perPerson)} por persona). Quedan ${money.format(plan.remaining)}.`
+  const note = language === 'en' ? 'The menu does not specify portion sizes, so confirm the quantities with the restaurant team.' : language === 'ca' ? 'La carta no indica la mida de les racions; confirma les quantitats amb l’equip del restaurant.' : 'La carta no indica el tamaño de las raciones; confirma las cantidades con el equipo del restaurante.'
+  return [intro, ...lines, total, note].join('\n\n')
 }
 
 export function getGroundedContext(knowledge: RestaurantKnowledge, question: string, previousUserQuestions: string[] = []): { system: string; filter: MenuFilterResult } {

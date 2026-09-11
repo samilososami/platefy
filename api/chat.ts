@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { ALLERGEN_IDS, excludedAllergens, filterMenu, getGroundedContext, isRestaurantSlug, restaurantMenuPath, safeDishImage, type RestaurantSlug, type RestaurantMenu, type MenuFilterResult, type DishImage, type MenuDish } from '../src/services/restaurant.js'
+import { ALLERGEN_IDS, buildGroupBudgetPlan, excludedAllergens, filterMenu, formatGroupBudgetPlan, getGroundedContext, isRestaurantSlug, restaurantLocale, restaurantMenuPath, safeDishImage, type RestaurantSlug, type RestaurantMenu, type MenuFilterResult, type DishImage, type MenuDish } from '../src/services/restaurant.js'
 
 export { filterMenu } from '../src/services/restaurant.js'
 
@@ -73,7 +73,7 @@ function streamAnswer(response: Response, answer: string, images: DishImage[] = 
 }
 
 function clientIp(request: Request) { const value = request.headers['x-forwarded-for']; return (Array.isArray(value) ? value[0] : value?.split(',')[0])?.trim() || request.socket.remoteAddress || 'unknown' }
-function withinLimit(request: Request) { const key = clientIp(request); const now = Date.now(); const current = windows.get(key); if (!current || now - current.started >= 60_000) { windows.set(key, { started: now, count: 1 }); return true } current.count += 1; return current.count <= 10 }
+function withinLimit(request: Request) { const key = clientIp(request); const now = Date.now(); const current = windows.get(key); if (!current || now - current.started >= 60_000) { windows.set(key, { started: now, count: 1 }); return true } current.count += 1; return current.count <= 60 }
 function originAllowed(request: Request) {
   const origin = request.headers.origin
   if (!origin) return true
@@ -135,6 +135,14 @@ function ensureAllergyNotice(answer: string, filter: MenuFilterResult, language:
   return answer + (language === 'en' ? '\n\nPlease confirm ingredients, traces and cross-contamination with the restaurant team.' : language === 'ca' ? '\n\nConfirma els ingredients, les traces i la contaminació creuada amb l’equip del restaurant.' : '\n\nConfirma los ingredientes, las trazas y la contaminación cruzada con el equipo del restaurante.')
 }
 
+function groundedFallback(menu: RestaurantMenu, filter: MenuFilterResult, language: string) {
+  const candidates = filter.dishes.filter(dish => dish.disponible).slice(0, 4)
+  if (!candidates.length) return language === 'en' ? 'I could not find a menu item that matches all those requirements.' : language === 'ca' ? 'No he trobat cap plat de la carta que compleixi tots aquests requisits.' : 'No he encontrado ningún plato de la carta que cumpla todos esos requisitos.'
+  const money = new Intl.NumberFormat(language === 'ca' ? 'ca-ES' : language === 'en' ? 'en-GB' : 'es-ES', { style: 'currency', currency: menu.restaurante.moneda })
+  const intro = language === 'en' ? 'These menu options match your request:' : language === 'ca' ? 'Aquestes opcions de la carta encaixen amb la consulta:' : 'Estas opciones de la carta encajan con tu consulta:'
+  return [intro, ...candidates.map(dish => `- **${dish.nombre}** — ${money.format(dish.precio)} · ${dish.descripcion}`)].join('\n')
+}
+
 function upstreamError(status: number, detail = '') {
   if (status === 401 || status === 403) return { status: 503, message: 'The assistant connection requires attention.', reason: 'authentication' }
   if (status === 402 || /credit|quota|balance|budget/i.test(detail)) return { status: 429, message: 'The assistant has reached its available quota.', reason: 'quota_unavailable' }
@@ -146,7 +154,7 @@ export default async function handler(request: Request, response: Response) {
   response.setHeader('Cache-Control', 'no-store, max-age=0'); response.setHeader('X-Content-Type-Options', 'nosniff')
   if (request.method !== 'POST') { response.setHeader('Allow', 'POST'); return response.status(405).json({ error: 'Method not allowed.' }) }
   if (!originAllowed(request)) return response.status(403).json({ error: 'Origin not allowed.' })
-  if (!withinLimit(request)) return response.status(429).json({ error: 'Too many requests. Please wait a minute.' })
+  if (!withinLimit(request)) return response.status(429).json({ error: 'Too many requests. Please wait a minute.', reason: 'rate_limited' })
   let timeout: ReturnType<typeof setTimeout> | undefined
   try {
     const payload = sanitize(await readBody(request))
@@ -180,6 +188,12 @@ export default async function handler(request: Request, response: Response) {
       }
       return streamAnswer(response, ensureAllergyNotice(answer, photos.filter, payload.locale), images)
     }
+    const userQuestions = payload.messages.filter(message => message.role === 'user').map(message => message.content)
+    const groupPlan = buildGroupBudgetPlan(knowledge.menu, userQuestions)
+    if (groupPlan) {
+      const answer = ensureAllergyNotice(formatGroupBudgetPlan(groupPlan, restaurantLocale(payload.locale)), groupPlan.filter, payload.locale)
+      return streamAnswer(response, answer, answerImages(knowledge.menu, answer, payload.restaurant))
+    }
     const gatewayKey = process.env.AI_GATEWAY_API_KEY
     if (!gatewayKey) return response.status(503).json({ error: 'The assistant connection is not configured.' })
     const grounded = getGroundedContext(knowledge, question, priorUserQuestions(payload.messages, payload.allergies))
@@ -191,7 +205,15 @@ export default async function handler(request: Request, response: Response) {
       headers: { Authorization: `Bearer ${gatewayKey}`, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: grounded.system }, ...payload.messages.slice(0, -1), { role: 'user', content: question }], temperature: 0.2, max_tokens: 700, stream: false, reasoning: { effort: 'none' } }),
     })
-    if (!upstream.ok) { const error = upstreamError(upstream.status, await upstream.text()); return response.status(error.status).json({ error: error.message, reason: error.reason }) }
+    if (!upstream.ok) {
+      const detail = await upstream.text()
+      if (upstream.status === 402 || upstream.status === 429) {
+        const fallback = groundedFallback(knowledge.menu, grounded.filter, payload.locale)
+        return streamAnswer(response, ensureAllergyNotice(fallback, grounded.filter, payload.locale), answerImages(knowledge.menu, fallback, payload.restaurant))
+      }
+      const error = upstreamError(upstream.status, detail)
+      return response.status(error.status).json({ error: error.message, reason: error.reason })
+    }
     const result = await upstream.json() as GatewayResult
     const verified = validateAnswer(result.choices?.[0]?.message?.content || '', grounded.filter, knowledge.menu, payload.locale)
     const images = answerImages(knowledge.menu, verified, payload.restaurant)

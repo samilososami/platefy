@@ -24,11 +24,13 @@ React 19, TypeScript y Vite. La compilación genera las entradas estáticas `/`,
 
 El chat usa `google/gemini-2.5-flash` mediante Vercel AI Gateway. La Function `/api/chat` autentica cada petición en el servidor con `AI_GATEWAY_API_KEY`; la clave nunca llega al navegador. `/api/` muestra el estado y permite probar esta conexión.
 
-Cada restaurante carga exclusivamente su `public/restaurantes/<slug>/menu.json` y la identidad compartida `public/platefy.md`. El agente se llama platefy. Solo se admiten `ko`, `vita` y `pica-pica`; el servidor selecciona la carta desde esa lista, nunca desde datos proporcionados por el navegador. La Function filtra alérgenos, dieta, categoría y presupuesto. Las fotos se resuelven desde rutas verificadas del mismo menú y se adjuntan al chat, sin visión ni URLs inventadas por el modelo. La interfaz no expone ni permite configurar el razonamiento.
+Cada restaurante carga exclusivamente su `public/restaurantes/<slug>/menu.json` y la identidad compartida `public/platefy.md`. El agente se llama platefy. Solo se admiten `ko`, `vita` y `pica-pica`; el servidor selecciona la carta desde esa lista, nunca desde datos proporcionados por el navegador. La Function filtra alérgenos, dieta y categoría. Las consultas con comensales y presupuesto total se calculan de forma determinista: cantidades, subtotales, total y coste por persona proceden de los precios del JSON y las correcciones conservan las restricciones recientes. Las fotos se resuelven desde rutas verificadas del mismo menú y se adjuntan al chat, sin visión ni URLs inventadas por el modelo. La interfaz no expone ni permite configurar el razonamiento.
 
 La voz española e inglesa se genera con Kokoro y la entrada hablada usa el reconocimiento del navegador. Las preguntas se procesan mediante Vercel AI Gateway; si el usuario activa la voz, el texto de la respuesta también se envía a Kokoro. La voz catalana no está disponible en los proveedores verificados.
 
 La carta, los precios y los horarios de la demostración son ficticios. No se confirman reservas ni se ofrecen garantías sobre alérgenos. El historial permanece en memoria y desaparece al recargar; solo se conserva el idioma.
+
+Si AI Gateway limita temporalmente las peticiones o no tiene créditos disponibles, el servidor mantiene una respuesta básica basada exclusivamente en el menú verificado. El límite local admite hasta 60 solicitudes por minuto e IP antes de mostrar una espera temporal.
 
 ## Despliegue
 

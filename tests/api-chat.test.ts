@@ -120,20 +120,20 @@ describe('restaurant chat function', () => {
     expect(readFileSync).not.toHaveBeenCalled(); expect(upstream).not.toHaveBeenCalled()
   })
 
-  it('reports exhausted quota separately from provider failures', async () => {
+  it('falls back to verified menu data when gateway credits are unavailable', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new globalThis.Response(JSON.stringify({ error: 'AI Gateway credit balance exhausted.' }), { status: 402 })))
     const res = response()
     await handler(request({ restaurant: 'ko', messages: [{ role: 'user', content: 'Hola' }] }, '127.0.0.53') as never, res as never)
-    expect(res.statusCode).toBe(429)
-    expect(res.jsonBody).toEqual(expect.objectContaining({ reason: 'quota_unavailable' }))
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('Nigiri de salmón')
   })
 
-  it('reports temporary gateway throttling as a rate limit', async () => {
+  it('falls back to verified menu data during temporary gateway throttling', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new globalThis.Response(JSON.stringify({ error: 'Too many requests.' }), { status: 429 })))
     const res = response()
     await handler(request({ restaurant: 'ko', messages: [{ role: 'user', content: 'Hola' }] }, '127.0.0.53') as never, res as never)
-    expect(res.statusCode).toBe(429)
-    expect(res.jsonBody).toEqual(expect.objectContaining({ reason: 'rate_limited' }))
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('Nigiri de salmón')
   })
 
   it('serves verified photos without invoking inference', async () => {
@@ -174,6 +174,28 @@ describe('restaurant chat function', () => {
 
 
 describe('Pica Pica demo backend', () => {
+  it('calculates a group order near the total budget and preserves it on a correction', async () => {
+    const upstream = vi.fn(); vi.stubGlobal('fetch', upstream)
+    const first = response()
+    await handler(request({ restaurant: 'pica-pica', locale: 'es', messages: [{ role: 'user', content: 'Somos 5 personas y tenemos un presupuesto de 180 euros. ¿Qué nos recomiendas?' }] }, '127.0.0.80') as never, first as never)
+    expect(first.statusCode).toBe(200)
+    expect(first.body).toContain('Para 5 personas')
+    expect(first.body).toContain('Total orientativo')
+    expect(first.body).toMatch(/17\d[,.]\d{2}/)
+
+    const correction = response()
+    await handler(request({ restaurant: 'pica-pica', locale: 'es', messages: [
+      { role: 'user', content: 'Somos 5 personas y tenemos un presupuesto de 180 euros. ¿Qué nos recomiendas?' },
+      { role: 'assistant', content: 'Te propongo tres tapas por 42 euros.' },
+      { role: 'user', content: 'Eso no se acerca a 180. Recalcula las cantidades y el total.' },
+    ] }, '127.0.0.80') as never, correction as never)
+    expect(correction.statusCode).toBe(200)
+    expect(correction.body).toContain('Para 5 personas')
+    expect(correction.body).toContain('Total orientativo')
+    expect(correction.body).toMatch(/17\d[,.]\d{2}/)
+    expect(upstream).not.toHaveBeenCalled()
+  })
+
   it('reads only its own demo menu and forwards the photographed price and uncertainty notice', async () => {
     const upstream = vi.fn().mockResolvedValue(gatewayResult('Patates braves cuesta 5,50 € según la carta.'))
     vi.stubGlobal('fetch', upstream)
